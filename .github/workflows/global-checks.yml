@@ -1,6 +1,6 @@
 name: global checks
 
-on: push
+on: pull_request
 
 jobs:
   hello:
@@ -8,5 +8,4 @@ jobs:
     steps:
       - run: |
           echo "hello world!"
-          set
  
