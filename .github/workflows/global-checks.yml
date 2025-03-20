@@ -1,4 +1,4 @@
-name: global merge checks
+name: global checks
 
 on: push
 
