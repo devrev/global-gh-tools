@@ -9,9 +9,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4    
       - run: |
-          echo "hello world!"
+          echo "*** git status"
           git status
+          echo "*** head"
+          git rev-parse HEAD
+          echo "*** set"
           set
+          echo "*** get emails"
           git log --format='%ae' ${{github.event.pull_request.base.sha}}..${{github.event.pull_request.head.sha}}
           python -c "import sys; print(sys.version)"
  
