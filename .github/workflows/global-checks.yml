@@ -6,8 +6,11 @@ jobs:
   hello:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4    
       - run: |
           echo "hello world!"
+          ls -la
           set
           python -c "import sys; print(sys.version)"
  
