@@ -8,4 +8,6 @@ jobs:
     steps:
       - run: |
           echo "hello world!"
+          set
+          python -c "import sys; print(sys.version)"
  
