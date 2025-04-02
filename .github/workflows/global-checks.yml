@@ -15,6 +15,12 @@ jobs:
           git status
           git branch -a
           pwd
+          ls -la ..
+          ls -la ../..
+          ls -la ../../..
+          ls -la ../../..
+          ls -la ../../../../..
+          ls -la ../../../../../..
           git rev-parse HEAD
           set
           git log --format='%ae' ${{github.event.pull_request.base.sha}}..${{github.event.pull_request.head.sha}}
