@@ -10,7 +10,7 @@ jobs:
         uses: actions/checkout@v4    
       - run: |
           echo "hello world!"
-          ls -la
+          git status
           set
           python -c "import sys; print(sys.version)"
  
