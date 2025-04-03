@@ -17,12 +17,17 @@ jobs:
           path: .global-checks-tooling
       - run: |
           set -x
+          echo "Check whether the repo has a codeowners file"
           python .global-checks-tooling/check_codeowners.py
+          echo "Get the email addresses of the committers"
+          git log --format='%ae' ${{github.event.pull_request.base.sha}}..${{github.event.pull_request.head.sha}} > .global-checks-tooling/committers.txt
+          echo "Check whether the committer emails are @devrev.ai"
+          python .global-checks-tooling/check_commit_emails.py
+
           git status
           git branch -a
           pwd
           echo ${{ secrets.SNYK_TOKEN }}
           git rev-parse HEAD
-          git log --format='%ae' ${{github.event.pull_request.base.sha}}..${{github.event.pull_request.head.sha}}
           python -c "import sys; print(sys.version)"
  
