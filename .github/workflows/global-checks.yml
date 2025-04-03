@@ -6,29 +6,22 @@ jobs:
   hello:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Check out target repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Checkout repository
+      - name: Check out workflow tooling repository
         uses: actions/checkout@v4
         with:
           repository: devrev/jano-gh-workflow
           path: .global-checks-tooling
-      - name: Do the checks
+      - name: Check that there is a CODEOWNERS file
         run: |
-          set -x
           echo "Check whether the repo has a codeowners file"
           python .global-checks-tooling/check_codeowners.py
+      - name: Check that the committers are from devrev.ai
+        run: |
           echo "Get the email addresses of the committers"
           git log --format='%ae' ${{github.event.pull_request.base.sha}}..${{github.event.pull_request.head.sha}} > .global-checks-tooling/committers.txt
           echo "Check whether the committer emails are @devrev.ai"
           python .global-checks-tooling/check_commit_emails.py
-
-          git status
-          git branch -a
-          pwd
-          echo ${{ secrets.SNYK_TOKEN }}
-          git rev-parse HEAD
-          python -c "import sys; print(sys.version)"
- 
