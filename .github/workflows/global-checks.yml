@@ -17,6 +17,7 @@ jobs:
           path: .global-checks-tooling
       - run: |
           set -x
+          python .global-checks-tooling/check_codeowners.py
           git status
           git branch -a
           pwd
