@@ -15,7 +15,8 @@ jobs:
         with:
           repository: devrev/jano-gh-workflow
           path: .global-checks-tooling
-      - run: |
+      - name: Do the checks
+        run: |
           set -x
           echo "Check whether the repo has a codeowners file"
           python .global-checks-tooling/check_codeowners.py
