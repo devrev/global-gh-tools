@@ -18,7 +18,7 @@ jobs:
       - name: Emit some text via gh cli.
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
-          gh issue comment ${{ github.event.issue.number }} --body "This is a test message from GitHub Actions."
+          gh pr comment ${{ github.event.pull_request.number }} --body "This is a test message from GitHub Actions."
       - name: Check that there is a CODEOWNERS file
         run: |
           echo "Check whether the repo has a codeowners file"
