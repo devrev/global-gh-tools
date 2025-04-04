@@ -29,3 +29,17 @@ jobs:
           git log --format='%ae' ${{github.event.pull_request.base.sha}}..${{github.event.pull_request.head.sha}} > .global-checks-tooling/committers.txt
           echo "Check whether the committer emails are @devrev.ai"
           python .global-checks-tooling/check_commit_emails.py
+      - name: Run trufflehog
+        run: |
+          BASE=${{github.event.pull_request.base.sha}}
+          HEAD=${{github.event.pull_request.head.sha}}
+          docker run --rm -v .:/tmp -w /tmp \
+          ghcr.io/trufflesecurity/trufflehog:latest \
+          git file:///tmp/ \
+          --since-commit \
+          ${BASE:-''} \
+          --branch \
+          ${HEAD:-''} \
+          --fail \
+          --no-update \
+          --json
