@@ -15,6 +15,10 @@ jobs:
         with:
           repository: devrev/jano-gh-workflow
           path: .global-checks-tooling
+      - name: Emit some text via gh cli.
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+          gh issue comment 1 --body "This is a test message from GitHub Actions."
       - name: Check that there is a CODEOWNERS file
         run: |
           echo "Check whether the repo has a codeowners file"
