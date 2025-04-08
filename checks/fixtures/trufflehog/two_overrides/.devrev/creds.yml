@@ -1,0 +1,5 @@
+allow:
+  - path: "libs/fields/devrev-common-fields/src/field-form-element-value/__tests__/sync-unit-field-form-element-value/sync-unit-field-form-element-value.integration.test.tsx"
+    lines: 49
+  - path: "libs/fields/devrev-common-fields/src/field-form-element-value/__tests__/sync-unit-field-form-element-value/test.tsx"
+    lines: 35
