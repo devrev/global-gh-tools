@@ -1,0 +1,40 @@
+version: 2.1
+orbs:
+  sidekick: devrev/sidekick@3
+
+jobs:
+  tidy_build_publish:
+    description: Build and test
+    executor: sidekick/base
+    resource_class: small
+    parameters:
+      publish:
+        description: Flag for enabling publishing steps
+        type: boolean
+        default: false
+    steps:
+      - sidekick/tidy_build_publish:
+          cache_key: r20230619
+          cache_files: requirements-dev.txt Makefile Makefile.sidekick
+          publish: << parameters.publish >>
+          snyk_python: true
+          snyk_enabled: true
+          build_steps:
+            - run:
+                name: Install deps
+                command: make deps
+            - run:
+                name: Run tests
+                command: make test
+
+workflows:
+  pr:
+    # PR checks
+    unless:
+      equal: [main, << pipeline.git.branch >>]
+    jobs:
+      - tidy_build_publish:
+          publish: false
+          context:
+            - github
+            - snyk-integration
