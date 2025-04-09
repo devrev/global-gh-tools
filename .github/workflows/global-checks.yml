@@ -15,6 +15,9 @@ jobs:
         with:
           repository: devrev/jano-gh-workflow
           path: .global-checks-tooling
+      - name: Load python requirements.
+        run: |
+          pip install strictyaml
       - name: Emit some text via gh cli.
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
@@ -48,5 +51,4 @@ jobs:
           --no-update \
           --json > .global-checks-tooling/trufflehog.json
           cat .global-checks-tooling/trufflehog.json
-          pip install strictyaml
           python .global-checks-tooling/checks/check_trufflehog.py .global-checks-tooling/trufflehog.json
