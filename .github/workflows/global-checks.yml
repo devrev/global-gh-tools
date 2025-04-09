@@ -44,4 +44,5 @@ jobs:
           --no-update \
           --json > .global-checks-tooling/trufflehog.json
           cat .global-checks-tooling/trufflehog.json
+          pip install strictyaml
           python .global-checks-tooling/checks/check_trufflehog.py .global-checks-tooling/trufflehog.json
