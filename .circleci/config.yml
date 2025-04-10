@@ -28,10 +28,7 @@ jobs:
                 command: make test
 
 workflows:
-  pr:
-    # PR checks
-    unless:
-      equal: [main, << pipeline.git.branch >>]
+  all_branches:
     jobs:
       - tidy_build_publish:
           publish: false
