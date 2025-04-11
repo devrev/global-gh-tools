@@ -2,6 +2,10 @@ import os
 
 EMAILS_PATH = ".global-checks-tooling/committers.txt"
 
+WHITELIST = [
+    "actions@github.com",
+]
+
 # Check that the emails in the file are from @devrev.ai.
 def check_commit_emails():
     """
@@ -16,6 +20,8 @@ def check_commit_emails():
 
     for email in emails:
         email = email.strip()
+        if email in WHITELIST:
+            continue
         if not email.endswith("@devrev.ai"):
             print(f"Error: Non devrev.ai email {email} in committers list.")
             return False

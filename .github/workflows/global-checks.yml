@@ -3,7 +3,7 @@ name: global checks
 on: pull_request
 
 jobs:
-  hello:
+  global_checks:
     runs-on: ubuntu-latest
     steps:
       - name: Check out target repository
@@ -20,8 +20,12 @@ jobs:
           pip install strictyaml
       - name: Check that there is a CODEOWNERS file
         run: |
-          echo "Check whether the repo has a codeowners file"
+          echo "Check whether the repo has a .github/CODEOWNERS file"
           python .global-checks-tooling/checks/check_codeowners.py
+      - name: Check that there is a valid repo.yml file
+        run: |
+          echo "Check whether the repo has a valid .devrev/repo.yml file"
+          python .global-checks-tooling/checks/check_repo_yml.py
       - name: Check that the committers are from devrev.ai
         run: |
           echo "Get the email addresses of the committers"
