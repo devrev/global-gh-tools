@@ -26,12 +26,6 @@ jobs:
         run: |
           echo "Check whether the repo has a valid .devrev/repo.yml file"
           python .global-checks-tooling/checks/check_repo_yml.py
-      - name: Check that the committers are from devrev.ai
-        run: |
-          echo "Get the email addresses of the committers"
-          git log --format='%ae' ${{github.event.pull_request.base.sha}}..${{github.event.pull_request.head.sha}} > .global-checks-tooling/committers.txt
-          echo "Check whether the committer emails are @devrev.ai"
-          python .global-checks-tooling/checks/check_commit_emails.py
       - name: Run trufflehog
         run: |
           BASE=${{github.event.pull_request.base.sha}}
