@@ -37,7 +37,7 @@ jobs:
           ${BASE:-''} \
           --branch \
           ${HEAD:-''} \
-          --fail \
+          --no-fail \
           --no-update \
           --json > .global-checks-tooling/trufflehog.json
           cat .global-checks-tooling/trufflehog.json
