@@ -14,6 +14,8 @@ jobs:
           repository: devrev/global-gh-tools
           path: .global-checks-tooling
       - name: Check PR description for work item link
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           echo "Checking PR description for work item link"
-          python .global-checks-tooling/checks/check_pr_description.py "${{ github.event.pull_request.body }}"
+          python .global-checks-tooling/checks/check_pr_description.py "$PR_BODY"

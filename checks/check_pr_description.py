@@ -6,7 +6,7 @@ def check_description(description):
     Checks if the PR description contains a work item link.
     Returns True if valid, False otherwise.
     """
-    regex = r"(^|\s)(https:\/\/app\.devrev\.ai\/devrev\/works\/)?(ISS|TKT|TASK)-\d+\b"
+    regex = r"(^|\s|\[)(https:\/\/app\.devrev\.ai\/devrev\/works\/)?(ISS|TKT|TASK)-\d+\b"
     return bool(re.search(regex, description))
 
 def check_description_cli(description):
