@@ -1,0 +1,7 @@
+Fixes bug reported in https://app.devrev.ai/devrev/works/ISS-999.
+
+## Bug Description
+The application was crashing when handling large datasets.
+
+## Solution
+Implemented pagination to handle large data efficiently. 

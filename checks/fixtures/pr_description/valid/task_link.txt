@@ -1,0 +1,3 @@
+Refactoring code structure for TASK-789.
+
+This refactoring improves maintainability and performance. 

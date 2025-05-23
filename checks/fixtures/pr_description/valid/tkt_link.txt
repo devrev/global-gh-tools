@@ -1,0 +1,4 @@
+Implements new feature as requested in TKT-456.
+
+- Added new API endpoint
+- Updated documentation 
