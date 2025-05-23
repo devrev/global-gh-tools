@@ -18,4 +18,4 @@ if __name__ == "__main__":
         sys.exit(1)
     
     pr_description = sys.argv[1]
-    check_description(pr_description) 
+    check_description(pr_description)
