@@ -13,6 +13,7 @@ def check_description_cli(description):
     """
     CLI version that prints messages and exits.
     """
+    print(f"Checking PR description: {description}")
     if not check_description(description):
         print("PR description must include a link to the work item (e.g., ISS-123, iss-123, TKT-456, tkt-456, TASK-789, task-789, or a full https://app.devrev.ai/devrev/works/ISS-123 link).")
         print("Note: If using formats like 'work-item:ISS-123', make sure to add a space after the colon: 'work-item: ISS-123'")
