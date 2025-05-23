@@ -9,4 +9,4 @@ jobs:
       - name: Check PR description for work item link
         run: |
           echo "Checking PR description for work item link"
-          python .global-checks-tooling/checks/check_pr_description.py "${{ github.event.pull_request.body }}"
+          python checks/check_pr_description.py "${{ github.event.pull_request.body }}"
