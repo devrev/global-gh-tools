@@ -14,12 +14,23 @@ jobs:
           repository: devrev/global-gh-tools
           path: .global-checks-tooling
 
-      - name: Get latest PR description
+      - name: Fetch latest PR description using GitHub REST API
+        id: fetch_pr
         run: |
           sudo apt-get install jq
-          PR_DESCRIPTION=$(jq -r ".pull_request.body" "$GITHUB_EVENT_PATH")
+          echo "Fetching latest PR description using REST API"
+          pr_number="${{ github.event.pull_request.number }}"
+          repo="${{ github.repository }}"
+          api_url="https://api.github.com/repos/$repo/pulls/$pr_number"
+
+          pr_body=$(curl -sSL \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "$api_url" | jq -r '.body')
+
+          echo "$pr_body" > pr_body.txt
 
       - name: Check PR description for work item link
         run: |
           echo "Checking PR description for work item link"
-          python .global-checks-tooling/checks/check_pr_description.py $PR_DESCRIPTION
+          python .global-checks-tooling/checks/check_pr_description.py "$(cat pr_body.txt)"
