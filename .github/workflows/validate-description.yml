@@ -6,10 +6,12 @@ jobs:
   validate_description:
     runs-on: ubuntu-latest
     steps:
-      - name: Check PR description for work item link
+      - name: Check out workflow tooling repository
+        uses: actions/checkout@v4
         with:
           repository: devrev/global-gh-tools
           path: .global-checks-tooling
+      - name: Check PR description for work item link
         run: |
           echo "Checking PR description for work item link"
           python .global-checks-tooling/checks/check_pr_description.py "${{ github.event.pull_request.body }}"
