@@ -31,8 +31,6 @@ jobs:
           echo "$pr_body" > pr_body.txt
 
       - name: Check PR description for work item link
-        env:
-          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           echo "Checking PR description for work item link"
           python .global-checks-tooling/checks/check_pr_description.py "$(cat pr_body.txt)"
