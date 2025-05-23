@@ -1,0 +1,5 @@
+This PR fixes the login issue described in ISS-123.
+
+## Changes
+- Updated authentication flow
+- Fixed token validation 

@@ -1,0 +1,6 @@
+This PR adds a new feature to the application.
+
+## Changes
+- Added new functionality
+- Updated tests
+- Fixed styling issues 

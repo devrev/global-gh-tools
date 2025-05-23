@@ -6,6 +6,9 @@ jobs:
   validate_description:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Check PR description for work item link
         run: |
           echo "Checking PR description for work item link"

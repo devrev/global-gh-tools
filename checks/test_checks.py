@@ -2,6 +2,7 @@ import checks.check_codeowners
 import checks.check_commit_emails
 import checks.check_repo_yml
 import checks.check_trufflehog
+import checks.check_pr_description
 
 import unittest
 import os
@@ -71,7 +72,36 @@ class TestCommitEmails(unittest.TestCase):
         with change_dir("checks/fixtures/emails/bad"):
             self.assertFalse(checks.check_commit_emails.check_commit_emails())
 
+class TestPRDescription(unittest.TestCase):
+    def test_valid_iss_link(self):
+        with open("checks/fixtures/pr_description/valid/iss_link.txt", "r") as f:
+            description = f.read()
+        self.assertTrue(checks.check_pr_description.check_description(description))
 
+    def test_valid_tkt_link(self):
+        with open("checks/fixtures/pr_description/valid/tkt_link.txt", "r") as f:
+            description = f.read()
+        self.assertTrue(checks.check_pr_description.check_description(description))
+
+    def test_valid_task_link(self):
+        with open("checks/fixtures/pr_description/valid/task_link.txt", "r") as f:
+            description = f.read()
+        self.assertTrue(checks.check_pr_description.check_description(description))
+
+    def test_valid_full_url(self):
+        with open("checks/fixtures/pr_description/valid/full_url.txt", "r") as f:
+            description = f.read()
+        self.assertTrue(checks.check_pr_description.check_description(description))
+
+    def test_invalid_no_link(self):
+        with open("checks/fixtures/pr_description/invalid/no_link.txt", "r") as f:
+            description = f.read()
+        self.assertFalse(checks.check_pr_description.check_description(description))
+
+    def test_invalid_wrong_format(self):
+        with open("checks/fixtures/pr_description/invalid/wrong_format.txt", "r") as f:
+            description = f.read()
+        self.assertFalse(checks.check_pr_description.check_description(description))
 
 if __name__ == '__main__':
     unittest.main()
