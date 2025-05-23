@@ -22,4 +22,4 @@ jobs:
       - name: Check PR description for work item link
         run: |
           echo "Checking PR description for work item link"
-          python .global-checks-tooling/checks/check_pr_description.py "$PR_DESCRIPTION"
+          python .global-checks-tooling/checks/check_pr_description.py $PR_DESCRIPTION
