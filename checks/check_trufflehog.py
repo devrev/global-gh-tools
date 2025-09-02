@@ -1,6 +1,7 @@
 import json
 import os
 import strictyaml
+import sys
 
 CREDS_FILE = ".devrev/creds.yml"
 
@@ -69,3 +70,11 @@ def check_trufflehog(json_path):
             return False
     print("No secrets found")
     return True
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python check_trufflehog.py <output.json>")
+        sys.exit(1)
+
+    json_path = sys.argv[1]
+    check_trufflehog(json_path)
