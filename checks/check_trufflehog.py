@@ -61,7 +61,9 @@ def check_trufflehog(json_path):
                 continue
             finding = json.loads(line)
             git_info = finding["SourceMetadata"]["Data"]["Git"]
-            fn = git_info["file"]
+            fn = git_info.get("file")
+            if fn is None:
+                continue
             line_num = git_info["line"]
             if is_overridden(fn, line_num, cred_overrides):
                 print(f"Skipping {fn}:{line_num} because it is in the creds.yml file")
