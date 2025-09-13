@@ -5,7 +5,7 @@ on:
   # Do check out and run code from the pull request's head commit. 
   # It is suitable for this usecase as we are only looking at PR description. 
   pull_request_target:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, labeled]
 
 jobs:
   validate_description:
