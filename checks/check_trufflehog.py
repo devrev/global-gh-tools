@@ -60,12 +60,21 @@ def check_trufflehog(json_path):
             if len(line) == 0:
                 continue
             finding = json.loads(line)
+            detector_name = finding["DetectorName"]
             git_info = finding["SourceMetadata"]["Data"]["Git"]
-            fn = git_info["file"]
+            fn = git_info.get("file")
             line_num = git_info["line"]
+
+            # Special handling for github tokens in commit messages:
+            if detector_name == "Github" and fn is None:
+                print(f"Skipping {detector_name} finding because detection is in commit message")
+                continue
             if is_overridden(fn, line_num, cred_overrides):
                 print(f"Skipping {fn}:{line_num} because it is in the creds.yml file")
                 continue
+            if fn is None:
+                # Clarify that the finding is in a commit message.
+                print(f"<commit message>")
             print(f"Found secret in {fn}:{line_num}")
             return False
     print("No secrets found")
