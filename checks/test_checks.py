@@ -63,6 +63,11 @@ class TestTrufflehog(unittest.TestCase):
             self.assertTrue(checks.check_trufflehog.check_trufflehog(
                 "./trufflehog.json"))
 
+    def test_merge_message(self):
+        with change_dir("checks/fixtures/trufflehog/merge_message"):
+            self.assertTrue(checks.check_trufflehog.check_trufflehog(
+                "./trufflehog.json"))
+
 class TestCommitEmails(unittest.TestCase):
     def test_good(self):
         with change_dir("checks/fixtures/emails/good"):
