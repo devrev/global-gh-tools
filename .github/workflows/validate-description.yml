@@ -41,6 +41,11 @@ jobs:
             echo "❌ ERROR: Failed to fetch PR description"
             echo ""
             
+            if [ -n "$api_message" ]; then
+              echo "API Message: $api_message"
+              echo ""
+            fi
+            
             if [[ "$api_message" == *"Not Found"* ]] || [[ "$api_message" == *"404"* ]]; then
               echo "Reason: PR not found or GITHUB_TOKEN lacks repository access"
             elif [[ "$api_message" == *"Resource not accessible"* ]] || [[ "$api_message" == *"403"* ]]; then
