@@ -1,15 +1,18 @@
 name: validate description
 
 on:
-  # pull_request_target is meant to run on bot commits. 
-  # Do check out and run code from the pull request's head commit. 
-  # It is suitable for this usecase as we are only looking at PR description. 
+  # pull_request_target is meant to run on bot commits.
+  # Do check out and run code from the pull request's head commit.
+  # It is suitable for this usecase as we are only looking at PR description.
   pull_request_target:
     types: [opened, synchronize, reopened, edited, labeled]
 
 jobs:
   validate_description:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
     steps:
       - name: Check out workflow tooling repository
         uses: actions/checkout@v4
@@ -26,14 +29,31 @@ jobs:
           repo="${{ github.repository }}"
           api_url="https://api.github.com/repos/$repo/pulls/$pr_number"
 
-          pr_body=$(curl -sSL \
+          response=$(curl -sSL \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
-            "$api_url" | jq -r '.body')
+            "$api_url")
+
+          pr_body=$(echo "$response" | jq -r '.body')
+          api_message=$(echo "$response" | jq -r '.message // empty')
+
+          if [ "$pr_body" == "null" ] || [ -z "$pr_body" ]; then
+            echo "❌ ERROR: Failed to fetch PR description"
+            echo ""
+            
+            if [ -n "$api_message" ]; then
+              echo "API Message: $api_message"
+              echo ""
+            fi
+            
+            echo "API Response:"
+            echo "$response" | jq '.'
+            exit 1
+          fi
 
           echo "$pr_body" > pr_body.txt
 
       - name: Check PR description for work item link
         run: |
           echo "Checking PR description for work item link"
-          python .global-checks-tooling/checks/check_pr_description.py "$(cat pr_body.txt)"
+          python3 .global-checks-tooling/checks/check_pr_description.py "$(cat pr_body.txt)"
