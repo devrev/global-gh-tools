@@ -1,9 +1,9 @@
 name: validate description
 
 on:
-  # pull_request_target is meant to run on bot commits. 
-  # Do check out and run code from the pull request's head commit. 
-  # It is suitable for this usecase as we are only looking at PR description. 
+  # pull_request_target is meant to run on bot commits.
+  # Do check out and run code from the pull request's head commit.
+  # It is suitable for this usecase as we are only looking at PR description.
   pull_request_target:
     types: [opened, synchronize, reopened, edited, labeled]
 
@@ -46,16 +46,6 @@ jobs:
               echo ""
             fi
             
-            if [[ "$api_message" == *"Not Found"* ]] || [[ "$api_message" == *"404"* ]]; then
-              echo "Reason: PR not found or GITHUB_TOKEN lacks repository access"
-            elif [[ "$api_message" == *"Resource not accessible"* ]] || [[ "$api_message" == *"403"* ]]; then
-              echo "Reason: Permission denied. GITHUB_TOKEN doesn't have 'pull-requests: read' permission"
-              echo "Check: Settings → Actions → General → Workflow permissions"
-            else
-              echo "Reason: Unexpected API response or empty PR description"
-            fi
-            
-            echo ""
             echo "API Response:"
             echo "$response" | jq '.'
             exit 1
