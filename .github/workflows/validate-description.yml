@@ -10,6 +10,9 @@ on:
 jobs:
   validate_description:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
     steps:
       - name: Check out workflow tooling repository
         uses: actions/checkout@v4
@@ -26,14 +29,36 @@ jobs:
           repo="${{ github.repository }}"
           api_url="https://api.github.com/repos/$repo/pulls/$pr_number"
 
-          pr_body=$(curl -sSL \
+          response=$(curl -sSL \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
-            "$api_url" | jq -r '.body')
+            "$api_url")
+
+          pr_body=$(echo "$response" | jq -r '.body')
+          api_message=$(echo "$response" | jq -r '.message // empty')
+
+          if [ "$pr_body" == "null" ] || [ -z "$pr_body" ]; then
+            echo "❌ ERROR: Failed to fetch PR description"
+            echo ""
+            
+            if [[ "$api_message" == *"Not Found"* ]] || [[ "$api_message" == *"404"* ]]; then
+              echo "Reason: PR not found or GITHUB_TOKEN lacks repository access"
+            elif [[ "$api_message" == *"Resource not accessible"* ]] || [[ "$api_message" == *"403"* ]]; then
+              echo "Reason: Permission denied. GITHUB_TOKEN doesn't have 'pull-requests: read' permission"
+              echo "Check: Settings → Actions → General → Workflow permissions"
+            else
+              echo "Reason: Unexpected API response or empty PR description"
+            fi
+            
+            echo ""
+            echo "API Response:"
+            echo "$response" | jq '.'
+            exit 1
+          fi
 
           echo "$pr_body" > pr_body.txt
 
       - name: Check PR description for work item link
         run: |
           echo "Checking PR description for work item link"
-          python .global-checks-tooling/checks/check_pr_description.py "$(cat pr_body.txt)"
+          python3 .global-checks-tooling/checks/check_pr_description.py "$(cat pr_body.txt)"
