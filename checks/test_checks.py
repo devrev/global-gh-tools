@@ -98,6 +98,16 @@ class TestPRDescription(unittest.TestCase):
             description = f.read()
         self.assertTrue(checks.check_pr_description.check_description(description))
 
+    def test_valid_generic_display_id(self):
+        with open("checks/fixtures/pr_description/valid/generic_display_id.txt", "r") as f:
+            description = f.read()
+        self.assertTrue(checks.check_pr_description.check_description(description))
+
+    def test_valid_issue_url_display_id(self):
+        with open("checks/fixtures/pr_description/valid/issue_url_display_id.txt", "r") as f:
+            description = f.read()
+        self.assertTrue(checks.check_pr_description.check_description(description))
+
     def test_invalid_no_link(self):
         with open("checks/fixtures/pr_description/invalid/no_link.txt", "r") as f:
             description = f.read()
@@ -105,6 +115,11 @@ class TestPRDescription(unittest.TestCase):
 
     def test_invalid_wrong_format(self):
         with open("checks/fixtures/pr_description/invalid/wrong_format.txt", "r") as f:
+            description = f.read()
+        self.assertFalse(checks.check_pr_description.check_description(description))
+
+    def test_invalid_issue_url_lowercase_key(self):
+        with open("checks/fixtures/pr_description/invalid/issue_url_lowercase_key.txt", "r") as f:
             description = f.read()
         self.assertFalse(checks.check_pr_description.check_description(description))
 
