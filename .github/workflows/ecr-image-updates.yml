@@ -1,0 +1,96 @@
+name: ECR Image Updates
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (check only, no PR creation)'
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+
+jobs:
+  check_ecr_images:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write  # Required for AWS OIDC
+    steps:
+      - name: Check out target repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main
+          fetch-depth: 0
+
+      - name: Check out workflow tooling repository
+        uses: actions/checkout@v4
+        with:
+          repository: devrev/global-gh-tools
+          path: .global-checks-tooling
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install boto3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ECR_CHECK_ROLE_ARN }}
+          role-session-name: github-actions-ecr-check
+          aws-region: us-east-1
+
+      - name: Check ECR images
+        id: check_images
+        run: |
+          echo "Checking ECR images in repository: ${{ github.repository }}"
+          cd ${{ github.workspace }}
+          python .global-checks-tooling/checks/check_ecr_images.py
+
+      - name: Create PR if updates needed
+        if: steps.check_images.outputs.updates_needed == 'true' && github.event.inputs.dry_run != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          # Install GitHub CLI
+          sudo apt-get update
+          sudo apt-get install gh
+
+          # Authenticate GitHub CLI
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+          # Run PR creation script
+          cd ${{ github.workspace }}
+          python .global-checks-tooling/checks/create_ecr_pr.py
+
+      - name: Summary
+        run: |
+          if [ -f ecr_updates.json ]; then
+            echo "ECR Image Check Summary:"
+            echo "======================="
+
+            updates_count=$(python -c "import json; data=json.load(open('ecr_updates.json')); print(len(data.get('updates', [])))")
+            echo "Updates needed: $updates_count"
+
+            if [ "$updates_count" -gt "0" ]; then
+              if [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
+                echo "Dry run mode - no PR was created"
+              else
+                echo "PR created with ECR image updates"
+              fi
+            else
+              echo "No ECR image updates needed"
+            fi
+          else
+            echo "No ECR updates file generated"
+          fi
