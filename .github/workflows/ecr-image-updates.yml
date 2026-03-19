@@ -8,6 +8,8 @@ on:
         required: false
         default: false
         type: boolean
+  push:
+    branches: [main]
   # schedule:
     # Run weekly on Mondays at 9 AM UTC
     # - cron: '0 9 * * 1'
