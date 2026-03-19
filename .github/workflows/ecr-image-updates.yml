@@ -1,13 +1,6 @@
 name: ECR Image Updates
 
 on:
-  workflow_dispatch:
-    inputs:
-      dry_run:
-        description: 'Run in dry-run mode (check only, no PR creation)'
-        required: false
-        default: false
-        type: boolean
   pull_request:
     branches: [main]
   # schedule:
@@ -57,26 +50,32 @@ jobs:
         run: |
           echo "Checking ECR images in repository: ${{ github.repository }}"
           cd ${{ github.workspace }}
-          python .global-checks-tooling/checks/check_ecr_images.py
+
+          # Capture the output and extract JSON data
+          output=$(python .global-checks-tooling/checks/check_ecr_images.py)
+          echo "$output"
+
+          # Extract JSON data between markers and save to temp file
+          echo "$output" | sed -n '/--- ECR_UPDATES_DATA_START ---/,/--- ECR_UPDATES_DATA_END ---/p' | sed '1d;$d' > ecr_data.json
 
       - name: Create PR if updates needed
-        if: steps.check_images.outputs.updates_needed == 'true' && github.event.inputs.dry_run != 'true'
+        if: steps.check_images.outputs.updates_needed == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Run PR creation script
+          # Run PR creation script with JSON data as stdin
           cd ${{ github.workspace }}
-          python .global-checks-tooling/checks/create_ecr_pr.py
+          cat ecr_data.json | python .global-checks-tooling/checks/create_ecr_pr.py
 
       - name: Summary
         run: |
-          if [ -f ecr_updates.json ]; then
+          if [ -f ecr_data.json ]; then
             echo "ECR Image Check Summary:"
             echo "======================="
 
-            updates_count=$(python -c "import json; data=json.load(open('ecr_updates.json')); print(len(data.get('updates', [])))")
+            updates_count=$(python -c "import json; data=json.load(open('ecr_data.json')); print(len(data.get('updates', [])))")
             echo "Updates needed: $updates_count"
 
             if [ "$updates_count" -gt "0" ]; then
@@ -88,6 +87,9 @@ jobs:
             else
               echo "No ECR image updates needed"
             fi
+
+            # Clean up temp file
+            rm -f ecr_data.json
           else
-            echo "No ECR updates file generated"
+            echo "No ECR updates data generated"
           fi

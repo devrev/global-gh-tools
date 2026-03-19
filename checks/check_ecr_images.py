@@ -76,9 +76,9 @@ class ECRImageChecker:
     def get_latest_tag(self, repository_name: str) -> Optional[str]:
         """Get the latest semantic version tag from ECR repository."""
         try:
+            # Get ALL images in the repository
             response = self.ecr_client.describe_images(
-                repositoryName=repository_name,
-                imageDetails=[{'imageTag': tag} for tag in ['1.0.0', '1.0.1', '1.1.0', '2.0.0']]
+                repositoryName=repository_name
             )
 
             # Get all semantic version tags
@@ -92,13 +92,27 @@ class ECRImageChecker:
             if not tags:
                 return None
 
-            # Sort tags by semantic version (simple string sort works for most cases)
-            tags.sort(reverse=True)
+            # Sort tags by semantic version (proper version comparison)
+            def version_key(version_str):
+                return tuple(map(int, version_str.split('.')))
+
+            tags.sort(key=version_key, reverse=True)
             return tags[0]
 
         except Exception as e:
             print(f"Error checking ECR repository {repository_name}: {e}")
             return None
+
+    def tag_exists(self, repository_name: str, tag: str) -> bool:
+        """Check if a specific tag exists in ECR repository."""
+        try:
+            response = self.ecr_client.describe_images(
+                repositoryName=repository_name,
+                imageIds=[{'imageTag': tag}]
+            )
+            return len(response.get('imageDetails', [])) > 0
+        except Exception as e:
+            return False
 
     def check_and_update_images(self) -> List[Dict]:
         """Check all Dockerfiles and determine necessary updates."""
@@ -113,14 +127,15 @@ class ECRImageChecker:
                 current_tag = image['current_tag']
                 repository_name = image['repository_name']
 
-                # Case 1: stable tag -> update to 1.0.0
+                # Case 1: stable tag -> update to 1.0.0 only if 1.0.0 exists
                 if current_tag == 'stable':
-                    updates_needed.append({
-                        **image,
-                        'update_type': 'stable_to_version',
-                        'new_tag': '1.0.0',
-                        'reason': 'Replace stable tag with 1.0.0'
-                    })
+                    if self.tag_exists(repository_name, '1.0.0'):
+                        updates_needed.append({
+                            **image,
+                            'update_type': 'stable_to_version',
+                            'new_tag': '1.0.0',
+                            'reason': 'Replace stable tag with 1.0.0'
+                        })
 
                 # Case 2: already on version -> check for newer
                 elif re.match(r'^\d+\.\d+\.\d+$', current_tag):
@@ -184,14 +199,15 @@ def main():
         # Create PR changes
         changes = checker.create_pr_changes(updates)
 
-        # Save changes to JSON for the workflow to process
-        with open('ecr_updates.json', 'w') as f:
-            json.dump({
-                'updates': updates,
-                'changes': changes
-            }, f, indent=2)
+        # Output data as JSON to stdout for the workflow to capture
+        output_data = {
+            'updates': updates,
+            'changes': changes
+        }
 
-        print(f"\n💾 Changes saved to ecr_updates.json")
+        print(f"\n--- ECR_UPDATES_DATA_START ---")
+        print(json.dumps(output_data, indent=2))
+        print(f"--- ECR_UPDATES_DATA_END ---")
 
         # Set GitHub Actions output
         if os.environ.get('GITHUB_ACTIONS'):

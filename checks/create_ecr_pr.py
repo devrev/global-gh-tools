@@ -97,16 +97,17 @@ def create_pr_description(updates: List[Dict]) -> str:
 
 def main():
     """Main function to create PR with ECR updates."""
-    # Check if updates file exists
-    if not os.path.exists('ecr_updates.json'):
-        print("❌ No ecr_updates.json found")
-        sys.exit(1)
-
-    # Load updates data
+    # Load updates data from stdin
     try:
-        with open('ecr_updates.json', 'r') as f:
-            data = json.load(f)
+        # Read all stdin content
+        stdin_content = sys.stdin.read().strip()
 
+        if not stdin_content:
+            print("❌ No input data provided")
+            sys.exit(1)
+
+        # Parse JSON data
+        data = json.loads(stdin_content)
         updates = data.get('updates', [])
         changes_by_file = data.get('changes', {})
 
@@ -115,7 +116,7 @@ def main():
             return
 
     except Exception as e:
-        print(f"❌ Error loading ecr_updates.json: {e}")
+        print(f"❌ Error loading input data: {e}")
         sys.exit(1)
 
     # Get repository name
@@ -151,8 +152,12 @@ def main():
         print("No changes detected after applying updates")
         return
 
-    # Stage and commit changes
-    run_command("git add .")
+    # Stage and commit changes (exclude tooling directory)
+    run_command("git add --all")
+    run_command("git reset .global-checks-tooling", check=False)
+    run_command("git reset ecr_data.json", check=False)
+    run_command("git reset ecr_updates.json", check=False)
+    run_command("git reset pr_description.md", check=False)
 
     commit_message = f"chore: update ECR Docker base images\n\n"
     commit_message += f"- Updated {len(updates)} image references\n"
