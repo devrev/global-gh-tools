@@ -64,13 +64,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Install GitHub CLI
           sudo apt-get update
           sudo apt-get install gh
-
-          # Authenticate GitHub CLI
-          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
           # Run PR creation script
           cd ${{ github.workspace }}
