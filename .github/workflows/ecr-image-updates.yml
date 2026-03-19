@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-     - cron: '0 9 * * 5' #Run weekly on Fridays at 9 AM UTC
+     - cron: '11 16 * * 4' #'0 9 * * 5' #Run weekly on Fridays at 9 AM UTC
 
 jobs:
   # Empty check for pull requests - always passes
