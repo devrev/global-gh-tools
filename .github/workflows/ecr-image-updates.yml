@@ -3,8 +3,11 @@ name: ECR Image Updates
 on:
   #pull_request:
   #  branches: [main]
-   schedule:
-      - cron: '0 9 * * 1' #Run weekly on Mondays at 9 AM UTC
+   #schedule:
+    #  - cron: '0 9 * * 1' #Run weekly on Mondays at 9 AM UTC
+  push:
+    branches:
+      - main
 
 jobs:
   check_ecr_images:
