@@ -3,12 +3,23 @@ name: ECR Image Updates
 on:
   pull_request:
     branches: [main]
-  # schedule:
-    # Run weekly on Mondays at 9 AM UTC
-    # - cron: '0 9 * * 1'
+  schedule:
+     - cron: '0 9 * * 5' #Run weekly on Fridays at 9 AM UTC
 
 jobs:
+  # Empty check for pull requests - always passes
+  pr_check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR Check Placeholder
+        run: |
+          echo "ECR check placeholder for PR - always passes"
+          echo "Scheduled ECR checks will run separately"
+
+  # Main ECR check job - only runs on schedule and for private/internal repos
   check_ecr_images:
+    if: github.event_name == 'schedule' && (github.repository_visibility == 'private' || github.repository_visibility == 'internal')
     runs-on: ubuntu-latest
     permissions:
       contents: write
