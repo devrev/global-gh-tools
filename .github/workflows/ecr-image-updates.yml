@@ -33,6 +33,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: devrev/global-gh-tools
+          ref: chore/ISS-266757/adding-python-and-workflow-for-ecr-global-check
           path: .global-checks-tooling
 
       - name: Set up Python
