@@ -187,14 +187,14 @@ def main():
 
         if not updates:
             print("✅ No ECR image updates needed")
-            return
 
-        print(f"🔄 Found {len(updates)} ECR image updates needed:")
+        if updates:
+            print(f"🔄 Found {len(updates)} ECR image updates needed:")
 
-        for update in updates:
-            print(f"  - {update['file']}:{update['line']}")
-            print(f"    {update['repository_name']}: {update['current_tag']} -> {update['new_tag']}")
-            print(f"    Reason: {update['reason']}")
+            for update in updates:
+                print(f"  - {update['file']}:{update['line']}")
+                print(f"    {update['repository_name']}: {update['current_tag']} -> {update['new_tag']}")
+                print(f"    Reason: {update['reason']}")
 
         # Create PR changes
         changes = checker.create_pr_changes(updates)
