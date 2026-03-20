@@ -18,7 +18,8 @@ jobs:
 
   # Main ECR check job - only runs on schedule and for private/internal repos
   check_ecr_images:
-    if: github.event_name == 'schedule' && (github.repository_visibility == 'private' || github.repository_visibility == 'internal')
+    if: (github.event_name == 'schedule' || github.event_name == 'push') && (github.repository_visibility == 'private' || github.repository_visibility == 'internal')
+    #if: github.event_name == 'schedule' && (github.repository_visibility == 'private' || github.repository_visibility == 'internal')
     runs-on: ubuntu-latest
     permissions:
       contents: write
