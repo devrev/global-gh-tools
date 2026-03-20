@@ -123,6 +123,7 @@ def changes_already_in_remote(branch_name: str, changes_by_file: Dict) -> bool:
 
 def main():
     """Main function to create PR with ECR updates."""
+    branch_name = "automated/ecr-image-updates"
     # Load updates data from stdin
     try:
         stdin_content = sys.stdin.read().strip()
@@ -137,6 +138,12 @@ def main():
 
         if not updates:
             print("✅ No updates needed")
+            existing_pr_number = get_existing_pr(branch_name)
+            if existing_pr_number:
+                print(f"Closing PR #{existing_pr_number} as no updates needed...")
+                run_command(f'gh pr close {existing_pr_number} --comment "All ECR images are already up to date, closing PR automatically."')
+                run_command(f"git push origin --delete {branch_name}", check=False)
+                print(f"✅ Closed PR #{existing_pr_number} and deleted branch")
             return
 
     except Exception as e:
@@ -155,8 +162,6 @@ def main():
     run_command("git config user.name 'ECR Image Updater'")
     run_command("git config user.email 'noreply@devrev.ai'")
 
-    branch_name = "automated/ecr-image-updates"
-
     # Check if PR already exists
     existing_pr_number = get_existing_pr(branch_name)
 
@@ -171,17 +176,6 @@ def main():
 
     # Apply file changes
     apply_file_changes(changes_by_file)
-
-    # Check if there are any changes to commit
-    result = run_command("git diff --quiet", check=False)
-    if result.returncode == 0:
-        print("No changes detected after applying updates")
-        if existing_pr_number:
-            print(f"All images already up to date, closing PR #{existing_pr_number}...")
-            run_command(f'gh pr close {existing_pr_number} --comment "All ECR images are already up to date, closing PR automatically."')
-            run_command(f"git push origin --delete {branch_name}", check=False)
-            print(f"✅ Closed PR #{existing_pr_number} and deleted branch")
-        return
 
     # Stage and commit changes (exclude tooling directory)
     run_command("git add --all")
