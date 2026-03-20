@@ -3,8 +3,7 @@ name: ECR Image Updates
 on:
   pull_request:
     branches: [main]
-  schedule:
-     - cron: '20 15 * * 4' #'0 9 * * 5' #Run weekly on Fridays at 9 AM UTC
+  workflow_call:
 
 jobs:
   # Empty check for pull requests - always passes
