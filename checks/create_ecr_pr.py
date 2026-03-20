@@ -197,7 +197,7 @@ def main():
         print(f"✅ Updated existing PR #{existing_pr_number}")
     else:
         # No PR exists → push and create new PR
-        run_command(f"git push origin {branch_name}")
+        run_command(f"git push origin {branch_name} --force")
 
         pr_description = create_pr_description(updates)
         pr_title = "chore: update ECR Docker base images"
