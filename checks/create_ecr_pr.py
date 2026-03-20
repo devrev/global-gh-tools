@@ -95,18 +95,29 @@ def create_pr_description(updates: List[Dict]) -> str:
     return description
 
 
+def get_existing_pr(branch_name: str) -> int | None:
+    """Check if a PR already exists for the given branch. Returns PR number or None."""
+    result = run_command(
+        f'gh pr list --head {branch_name} --base main --state open --json number',
+        check=False
+    )
+    if result.returncode == 0 and result.stdout.strip():
+        prs = json.loads(result.stdout)
+        if prs:
+            return prs[0]['number']
+    return None
+
+
 def main():
     """Main function to create PR with ECR updates."""
     # Load updates data from stdin
     try:
-        # Read all stdin content
         stdin_content = sys.stdin.read().strip()
 
         if not stdin_content:
             print("❌ No input data provided")
             sys.exit(1)
 
-        # Parse JSON data
         data = json.loads(stdin_content)
         updates = data.get('updates', [])
         changes_by_file = data.get('changes', {})
@@ -131,13 +142,15 @@ def main():
     run_command("git config user.name 'ECR Image Updater'")
     run_command("git config user.email 'noreply@devrev.ai'")
 
-    # Create branch name
     branch_name = "automated/ecr-image-updates"
 
-    # Check if branch already exists and delete it
+    # Check if PR already exists
+    existing_pr_number = get_existing_pr(branch_name)
+
+    # Delete local branch if it exists
     result = run_command(f"git rev-parse --verify {branch_name}", check=False)
     if result.returncode == 0:
-        print(f"Branch {branch_name} already exists, deleting...")
+        print(f"Local branch {branch_name} already exists, deleting...")
         run_command(f"git branch -D {branch_name}")
 
     # Create and checkout new branch
@@ -150,6 +163,11 @@ def main():
     result = run_command("git diff --quiet", check=False)
     if result.returncode == 0:
         print("No changes detected after applying updates")
+        if existing_pr_number:
+            print(f"All images already up to date, closing PR #{existing_pr_number}...")
+            run_command(f'gh pr close {existing_pr_number} --comment "All ECR images are already up to date, closing PR automatically."')
+            run_command(f"git push origin --delete {branch_name}", check=False)
+            print(f"✅ Closed PR #{existing_pr_number} and deleted branch")
         return
 
     # Stage and commit changes (exclude tooling directory)
@@ -172,26 +190,25 @@ def main():
 
     run_command(f'git commit -m "{commit_message}"')
 
-    # Push branch
-    run_command(f"git push origin {branch_name}")
+    if existing_pr_number:
+        # PR exists → force push to update it
+        print(f"PR #{existing_pr_number} already exists, force pushing updates...")
+        run_command(f"git push origin {branch_name} --force")
+        print(f"✅ Updated existing PR #{existing_pr_number}")
+    else:
+        # No PR exists → push and create new PR
+        run_command(f"git push origin {branch_name}")
 
-    # Create PR description
-    pr_description = create_pr_description(updates)
+        pr_description = create_pr_description(updates)
+        pr_title = "chore: update ECR Docker base images"
 
-    # Create PR using GitHub CLI
-    pr_title = "chore: update ECR Docker base images"
+        with open('pr_description.md', 'w') as f:
+            f.write(pr_description)
 
-    # Save PR description to file to handle multiline content
-    with open('pr_description.md', 'w') as f:
-        f.write(pr_description)
+        run_command(f'gh pr create --title "{pr_title}" --body-file pr_description.md --base main')
+        print(f"✅ Created PR: {pr_title}")
 
-    # Create PR
-    run_command(f'gh pr create --title "{pr_title}" --body-file pr_description.md --base main')
-
-    print(f"✅ Created PR: {pr_title}")
-
-    # Clean up
-    os.remove('pr_description.md')
+        os.remove('pr_description.md')
 
 
 if __name__ == "__main__":
