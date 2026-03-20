@@ -144,6 +144,8 @@ def main():
                 run_command(f'gh pr close {existing_pr_number} --comment "All ECR images are already up to date, closing PR automatically."')
                 run_command(f"git push origin --delete {branch_name}", check=False)
                 print(f"✅ Closed PR #{existing_pr_number} and deleted branch")
+            else:
+                print("✅ No open PR found, nothing to do")
             return
 
     except Exception as e:
