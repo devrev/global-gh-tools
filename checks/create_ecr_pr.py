@@ -189,9 +189,15 @@ def main():
         commit_message += f"- Upgraded {version_count} images to newer versions\n"
 
     run_command(f'git commit -m "{commit_message}"')
-
+   
     if existing_pr_number:
-        # PR exists → force push to update it
+        # PR exists → check if changes are different from remote branch
+        run_command(f"git fetch origin {branch_name}", check=False)
+        result = run_command(f"git diff {branch_name} origin/{branch_name} --quiet", check=False)
+        if result.returncode == 0:
+            print(f"PR #{existing_pr_number} already has these changes, skipping force push...")
+            return
+        # Changes are different → force push to update it
         print(f"PR #{existing_pr_number} already exists, force pushing updates...")
         run_command(f"git push origin {branch_name} --force")
         print(f"✅ Updated existing PR #{existing_pr_number}")
