@@ -107,6 +107,19 @@ def get_existing_pr(branch_name: str) -> int | None:
             return prs[0]['number']
     return None
 
+def changes_already_in_remote(branch_name: str, changes_by_file: Dict) -> bool:
+    """Check if remote branch already has the same file changes."""
+    run_command(f"git fetch origin {branch_name}", check=False)
+    
+    for file_path, changes in changes_by_file.items():
+        result = run_command(f"git show origin/{branch_name}:{file_path}", check=False)
+        if result.returncode != 0:
+            return False
+        remote_lines = result.stdout.splitlines()
+        for line_num, old_content, new_content in changes:
+            if remote_lines[line_num - 1].strip() != new_content.strip():
+                return False
+    return True
 
 def main():
     """Main function to create PR with ECR updates."""
@@ -188,13 +201,11 @@ def main():
     if version_count > 0:
         commit_message += f"- Upgraded {version_count} images to newer versions\n"
 
-    run_command(f'git commit -m "{commit_message}"')
-   
+    run_command(f'git commit -m "{commit_message}"')    
+
     if existing_pr_number:
-        # PR exists → check if changes are different from remote branch
-        run_command(f"git fetch origin {branch_name}", check=False)
-        result = run_command(f"git diff {branch_name} origin/{branch_name} --quiet", check=False)
-        if result.returncode == 0:
+        # PR exists → check if remote branch already has same changes
+        if changes_already_in_remote(branch_name, changes_by_file):
             print(f"PR #{existing_pr_number} already has these changes, skipping force push...")
             return
         # Changes are different → force push to update it
