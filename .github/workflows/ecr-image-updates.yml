@@ -70,7 +70,7 @@ jobs:
           echo "$output" | sed -n '/--- ECR_UPDATES_DATA_START ---/,/--- ECR_UPDATES_DATA_END ---/p' | sed '1d;$d' > ecr_data.json
 
       - name: Create PR if updates needed
-        if: steps.check_images.outputs.updates_needed == 'true'
+        #if: steps.check_images.outputs.updates_needed == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
