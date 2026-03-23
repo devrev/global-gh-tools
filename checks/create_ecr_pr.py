@@ -161,7 +161,7 @@ def main():
     print(f"🔄 Processing {len(updates)} ECR image updates for {repo_name}")
 
     # Configure git
-    run_command("git config user.name 'ECR Image Updater'")
+    run_command("git config user.name 'ECR Image Updates'")
     run_command("git config user.email 'noreply@devrev.ai'")
 
     # Check if PR already exists
@@ -186,7 +186,7 @@ def main():
     run_command("git reset ecr_updates.json", check=False)
     run_command("git reset pr_description.md", check=False)
 
-    commit_message = f"chore: update ECR Docker base images\n\n"
+    commit_message = f"chore: update ECR Docker images\n\n"
     commit_message += f"- Updated {len(updates)} image references\n"
 
     stable_count = len([u for u in updates if u['update_type'] == 'stable_to_version'])
@@ -213,7 +213,7 @@ def main():
         run_command(f"git push origin {branch_name} --force")
 
         pr_description = create_pr_description(updates)
-        pr_title = "chore: update ECR Docker base images"
+        pr_title = "chore: update ECR Docker images"
 
         with open('pr_description.md', 'w') as f:
             f.write(pr_description)
