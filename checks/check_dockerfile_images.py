@@ -18,7 +18,7 @@ ALLOWED_PREFIXES = [
 
 # Images to ignore completely - add or remove as needed
 IGNORED_IMAGES = [
-    "scratch",
+    #"scratch",
 ]
 
 
