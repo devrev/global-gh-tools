@@ -52,9 +52,7 @@ def extract_from_statements(dockerfile_path: str) -> List[Tuple[int, str]]:
             parts = stripped.split()
             if len(parts) >= 2:
                 image = parts[1]
-                # Skip scratch and local build stages (FROM build-stage etc.)
-                if image.lower() != "scratch" and "/" in image or image.lower() != "scratch":
-                    from_statements.append((line_num, image))
+                from_statements.append((line_num, image))
 
     return from_statements
 
