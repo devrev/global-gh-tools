@@ -64,7 +64,7 @@ def apply_file_changes(changes_by_file: Dict[str, List[Tuple[int, str, str]]]):
 def create_pr_description(updates: List[Dict]) -> str:
     """Create PR description based on updates."""
     description = "## 🐳 ECR Docker Image Updates\n\n"
-    description += "This automated PR updates ECR Docker base images to newer versions.\n\n"
+    description += "This automated PR updates ECR images to newer versions.\n\n"
 
     # Group updates by type
     stable_updates = [u for u in updates if u['update_type'] == 'stable_to_version']
