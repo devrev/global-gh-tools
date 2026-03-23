@@ -6,15 +6,28 @@ on:
   workflow_call:
 
 jobs:
-  # Empty check for pull requests - always passes
   pr_check:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - name: PR Check Placeholder
+      - name: Check out target repository
+        uses: actions/checkout@v4
+
+      - name: Check out workflow tooling repository
+        uses: actions/checkout@v4
+        with:
+          repository: devrev/global-gh-tools
+          ref: chore/ISS-266757/adding-python-and-workflow-for-ecr-global-check
+          path: .global-checks-tooling
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Validate Dockerfile images
         run: |
-          echo "ECR check placeholder for PR - always passes"
-          echo "Scheduled ECR checks will run separately"
+          python .global-checks-tooling/checks/check_dockerfile_images.py
 
   # Main ECR check job - only runs on schedule and for private/internal repos
   check_ecr_images:
@@ -53,7 +66,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install boto3
+          pip install boto3==1.42.63
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
