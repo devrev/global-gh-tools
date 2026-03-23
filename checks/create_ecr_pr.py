@@ -90,6 +90,7 @@ def create_pr_description(updates: List[Dict]) -> str:
         description += f"- `{file_path}`\n"
 
     description += "\n---\n"
+    description += "📋 **Changelog**: [View all version changes](https://github.com/devrev/base-images/blob/main/CHANGELOG.md)\n\n"
     description += "*This PR was automatically created by the global ECR image update workflow.*"
 
     return description
