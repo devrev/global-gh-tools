@@ -26,6 +26,12 @@ jobs:
       pull-requests: write
       id-token: write  # Required for AWS OIDC
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ECR_APP_ID }}
+          private-key: ${{ secrets.ECR_APP_PRIVATE_KEY }}
       - name: Check out target repository
         uses: actions/checkout@v4
         with:
@@ -72,9 +78,9 @@ jobs:
       - name: Create PR if updates needed
         #if: steps.check_images.outputs.updates_needed == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          #GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           # Run PR creation script with JSON data as stdin
           cd ${{ github.workspace }}
