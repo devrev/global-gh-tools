@@ -16,6 +16,11 @@ ALLOWED_PREFIXES = [
     "cgr.dev/",
 ]
 
+# Images to ignore completely - add or remove as needed
+IGNORED_IMAGES = [
+    "scratch",
+]
+
 
 def find_dockerfiles(root_path: str = ".") -> List[str]:
     """Find all files with 'Dockerfile' in their filename."""
@@ -55,12 +60,13 @@ def extract_from_statements(dockerfile_path: str) -> List[Tuple[int, str]]:
 
 
 def is_allowed(image: str) -> bool:
-    """Check if image starts with one of the allowed prefixes."""
+    """Check if image starts with one of the allowed prefixes or is ignored."""
+    if image.lower() in IGNORED_IMAGES:
+        return True
     for prefix in ALLOWED_PREFIXES:
         if image.startswith(prefix):
             return True
     return False
-
 
 def main():
     """Main function to validate all Dockerfile FROM statements."""
