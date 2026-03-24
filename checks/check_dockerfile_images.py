@@ -14,6 +14,7 @@ from typing import List, Tuple
 ALLOWED_PREFIXES = [
     "173672169127.dkr.ecr.us-east-1.amazonaws.com/devrev/",
     "cgr.dev/",
+    # Example: cypress/
 ]
 
 # Images to ignore completely - add or remove as needed
