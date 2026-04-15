@@ -1,4 +1,4 @@
-name: global checks
+name: patch block
 
 on:
   pull_request:
