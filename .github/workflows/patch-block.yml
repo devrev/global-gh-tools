@@ -34,8 +34,8 @@ jobs:
             .global-checks-tooling/checks/check_patch_block.py \
             .global-checks-tooling/data/repo_to_vulns.json \
             .global-checks-tooling/changed_files.txt \
-            .global-checks-tooling/pr_comment.md \
-            ${{ github.repository }}
+            ${{ github.repository }} \
+            .global-checks-tooling/pr_comment.md
       - name: Comment on PR if check fails
         if: always() && steps.patch_check.outcome == 'failure'
         env:
