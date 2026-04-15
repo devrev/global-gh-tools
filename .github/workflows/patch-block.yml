@@ -5,7 +5,7 @@ on:
     types: [opened, synchronize, reopened, labeled]
 
 jobs:
-  global_checks:
+  patch_block:
     runs-on: ubuntu-latest
     steps:
       - name: Check out target repository
