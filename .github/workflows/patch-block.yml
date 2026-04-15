@@ -34,18 +34,14 @@ jobs:
             .global-checks-tooling/checks/check_patch_block.py \
             .global-checks-tooling/data/repo_to_vulns.json \
             .global-checks-tooling/changed_files.txt \
+            .global-checks-tooling/pr_comment.md \
             ${{ github.repository }}
       - name: Comment on PR if check fails
         if: always() && steps.patch_check.outcome == 'failure'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body \
-            "⚠️ **Patch Block Check Failed**
-
-            This PR modifies files that are subject to patching restrictions. Please review the check output above for details.
-
-            If you believe this is a false positive, please contact your security team."
+          gh pr comment ${{ github.event.pull_request.number }} --body-file .global-checks-tooling/pr_comment.md
       - name: Fail job if check failed
         if: always() && steps.patch_check.outcome == 'failure'
         run: exit 1

@@ -14,13 +14,14 @@ ALLOWED_FILES = [
 ]
 
 def check_patch_block():
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 5:
         print("Usage: python check_patch_block.py <blocked_repo_json> <changed_files_path> <repo_name>")
         sys.exit(1)
 
     blocked_repo_json = sys.argv[1]
     changed_files_path = sys.argv[2]
     repo_name = sys.argv[3]
+    comment_file = sys.argv[4]
     with open(blocked_repo_json) as f:
         blocked_repos = json.load(f)
     if repo_name not in blocked_repos:
@@ -30,18 +31,19 @@ def check_patch_block():
         changed_files = f.read().splitlines()
     for file in changed_files:
         if file not in ALLOWED_FILES:
-            print(f"This repository is blocked from any work other than patching.")
-            print(f"File {file} is not allowed to be modified in this patch.")
-            print("The following patching issues are past SLA:")
-            for issue in blocked_repos[repo_name]:
-                id = issue['id']
-                overdue_days = issue['overdue_days']
-                severity = issue['severity']
-                owner_email = issue['owner_email']
-                last_checked = issue['timestamp']
-                # Extract issue number from id, it is the last part after the last slash.
-                issue_number = id.split('/')[-1]
-                print(f"- ISS-{issue_number}, overdue {overdue_days:.1f}d, sev {severity}, owner: {owner_email}, checked: {last_checked}")
+            with open(comment_file, 'w') as f:
+                f.write(f"## ⚠️ This repository is blocked from any work other than patching.\n")
+                f.write(f"File {file} is not allowed to be modified in this patch.\n")
+                f.write("The following patching issues are past SLA:\n")
+                for issue in blocked_repos[repo_name]:
+                    id = issue['id']
+                    overdue_days = issue['overdue_days']
+                    severity = issue['severity']
+                    owner_email = issue['owner_email']
+                    last_checked = issue['timestamp']
+                    # Extract issue number from id, it is the last part after the last slash.
+                    issue_number = id.split('/')[-1]
+                    f.write(f"- ISS-{issue_number}, overdue {overdue_days:.1f}d, sev {severity}, owner: {owner_email}, checked: {last_checked}\n")
             return False
     return True
 
