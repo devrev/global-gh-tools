@@ -16,7 +16,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: devrev/global-gh-tools
-          ref: jro/repo_block
           path: .global-checks-tooling
       - name: Load python requirements.
         run: |
