@@ -32,7 +32,7 @@ def check_patching_sla():
     for file in changed_files:
         if file not in ALLOWED_FILES:
             with open(comment_file, 'w') as f:
-                f.write(f"## ⚠️ This repository is blocked from any work other than patching.\n")
+                f.write(f"## ⚠️ Heads-up: This repository will be blocked from any work other than patching.\n")
                 f.write(f"File {file} is not allowed to be modified in this patch.\n")
                 f.write("The following vulnerability issues are past SLA:\n")
                 for issue in blocked_repos[repo_name]:
@@ -44,6 +44,7 @@ def check_patching_sla():
                     # Extract issue number from id, it is the last part after the last slash.
                     issue_number = id.split('/')[-1]
                     f.write(f"- ISS-{issue_number}, overdue {overdue_days:.1f}d, sev {severity}, owner: {owner_email}, checked: {last_checked}\n")
+                f.write("Note that there is significant latency in updating this list. Please reach out on #antifragile if you are in a hurry or have an emergency.\n")
             return False
     return True
 
