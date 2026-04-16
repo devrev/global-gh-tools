@@ -1,11 +1,11 @@
-name: patch block
+name: patching SLA check
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled]
 
 jobs:
-  patch_block:
+  patching_sla_check:
     runs-on: ubuntu-latest
     steps:
       - name: Check out target repository
@@ -21,7 +21,7 @@ jobs:
       - name: Load python requirements.
         run: |
           pip install strictyaml
-      - name: Run patching block check
+      - name: Run patching SLA check
         id: patch_check
         continue-on-error: true
         run: |
@@ -31,7 +31,7 @@ jobs:
             .global-checks-tooling/changed_files.txt
           cat .global-checks-tooling/changed_files.txt
           python \
-            .global-checks-tooling/checks/check_patch_block.py \
+            .global-checks-tooling/checks/check_patching_sla.py \
             .global-checks-tooling/data/repo_to_vulns.json \
             .global-checks-tooling/changed_files.txt \
             ${{ github.repository }} \

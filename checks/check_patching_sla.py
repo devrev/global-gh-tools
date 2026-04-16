@@ -13,9 +13,9 @@ ALLOWED_FILES = [
 
 ]
 
-def check_patch_block():
+def check_patching_sla():
     if len(sys.argv) != 5:
-        print("Usage: python check_patch_block.py <blocked_repo_json> <changed_files_path> <repo_name>")
+        print("Usage: python check_patching_sla.py <blocked_repo_json> <changed_files_path> <repo_name> <comment_file>")
         sys.exit(1)
 
     blocked_repo_json = sys.argv[1]
@@ -34,7 +34,7 @@ def check_patch_block():
             with open(comment_file, 'w') as f:
                 f.write(f"## ⚠️ This repository is blocked from any work other than patching.\n")
                 f.write(f"File {file} is not allowed to be modified in this patch.\n")
-                f.write("The following patching issues are past SLA:\n")
+                f.write("The following vulnerability issues are past SLA:\n")
                 for issue in blocked_repos[repo_name]:
                     id = issue['id']
                     overdue_days = issue['overdue_days']
@@ -49,5 +49,5 @@ def check_patch_block():
 
 
 if __name__ == "__main__":
-    if not check_patch_block():
+    if not check_patching_sla():
         exit(1)
