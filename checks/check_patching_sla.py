@@ -44,7 +44,7 @@ def check_patching_sla():
                     # Extract issue number from id, it is the last part after the last slash.
                     issue_number = id.split('/')[-1]
                     f.write(f"- ISS-{issue_number}, overdue {overdue_days:.1f}d, sev {severity}, owner: {owner_email}, checked: {last_checked}\n")
-                f.write("Note that there is significant latency in updating this list. Please reach out on #antifragile if you are in a hurry or have an emergency.\n")
+                f.write("\nNote that there is significant latency in updating this list. Please reach out on #antifragile if you are in a hurry or have an emergency.\n")
             return False
     return True
 
