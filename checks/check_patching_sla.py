@@ -5,12 +5,15 @@ import os
 # The list of allowed files in the patch. If any file outside this list is modified, the patch will be blocked.
 # The list includes any file that is necessary for dependency management or build configuration.
 ALLOWED_FILES = [
+    ".snyk",
+    "CODEOWNERS",
     "go.mod",
     "go.sum",
     "requirements.txt",
     "package.json",
+    "package-lock.json",
+    "pkg.config.json",
     "yarn.lock",
-
 ]
 
 def check_patching_sla():
