@@ -1,0 +1,46 @@
+name: patching SLA check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+jobs:
+  patching_sla_check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out target repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Check out workflow tooling repository
+        uses: actions/checkout@v6
+        with:
+          repository: devrev/global-gh-tools
+          path: .global-checks-tooling
+      - name: Load python requirements.
+        run: |
+          pip install strictyaml
+      - name: Run patching SLA check
+        id: patch_check
+        continue-on-error: true
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff --name-only \
+            origin/${{ github.base_ref }}...HEAD > \
+            .global-checks-tooling/changed_files.txt
+          cat .global-checks-tooling/changed_files.txt
+          python \
+            .global-checks-tooling/checks/check_patching_sla.py \
+            .global-checks-tooling/data/repo_to_vulns.json \
+            .global-checks-tooling/changed_files.txt \
+            ${{ github.repository }} \
+            .global-checks-tooling/pr_comment.md
+      - name: Comment on PR if check fails
+        if: always() && steps.patch_check.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body-file .global-checks-tooling/pr_comment.md
+      - name: Fail job if check failed
+        if: always() && steps.patch_check.outcome == 'failure'
+        run: exit 1
