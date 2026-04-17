@@ -27,10 +27,11 @@ def check_patching_sla():
     if repo_name not in blocked_repos:
         print(f"Repository {repo_name} is not in the blocked repos list.")
         return True
-    with open(changed_files_path) as f:        
+    with open(changed_files_path) as f:
         changed_files = f.read().splitlines()
     for file in changed_files:
-        if file not in ALLOWED_FILES:
+        filename = os.path.basename(file)
+        if filename not in ALLOWED_FILES:
             with open(comment_file, 'w') as f:
                 f.write(f"## ⚠️ Heads-up: This repository will be blocked from any work other than patching.\n")
                 f.write(f"File {file} is not allowed to be modified in this patch.\n")
