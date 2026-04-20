@@ -16,7 +16,8 @@ ALLOWED_FILES = [
     "yarn.lock",
     "Package.swift",
     "Package.resolved",
-    "project.pbxproj"
+    "project.pbxproj",
+    "uv.lock"
 ]
 
 def check_patching_sla():
