@@ -1,11 +1,13 @@
 import json
 import sys
 import os
+import fnmatch
 import boto3
 from botocore.exceptions import ClientError
 
-# The list of allowed files in the patch. If any file outside this list is modified, the patch will be blocked.
+# The list of allowed files/patterns in the patch. If any file outside this list is modified, the patch will be blocked.
 # The list includes any file that is necessary for dependency management or build configuration.
+# Supports glob patterns (e.g., "*.lock").
 ALLOWED_FILES = [
     ".snyk",
     "CODEOWNERS",
@@ -19,8 +21,28 @@ ALLOWED_FILES = [
     "Package.swift",
     "Package.resolved",
     "project.pbxproj",
-    "uv.lock"
+    "uv.lock",
+    "Dockerfile*"
 ]
+
+def is_file_allowed(file_path, allowed_patterns):
+    """
+    Check if a file basename matches any of the allowed patterns.
+
+    Args:
+        file_path: The file path to check
+        allowed_patterns: List of allowed file patterns (supports glob patterns)
+
+    Returns:
+        True if the file basename matches any allowed pattern, False otherwise
+    """
+    filename = os.path.basename(file_path)
+
+    for pattern in allowed_patterns:
+        if fnmatch.fnmatch(filename, pattern):
+            return True
+
+    return False
 
 def query_dynamodb_vulns(repo_name):
     """
@@ -62,8 +84,7 @@ def check_patching_sla():
     with open(changed_files_path) as f:
         changed_files = f.read().splitlines()
     for file in changed_files:
-        filename = os.path.basename(file)
-        if filename not in ALLOWED_FILES:
+        if not is_file_allowed(file, ALLOWED_FILES):
             print(f"Repository {repo_name} is in the blocked repos list. Please see PR comment for details.")
             with open(comment_file, 'w') as f:
                 f.write(f"## ⚠️ Heads-up: This repository will be blocked from any work other than patching.\n")
