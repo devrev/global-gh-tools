@@ -19,7 +19,7 @@ jobs:
           path: .global-checks-tooling
       - name: Load python requirements.
         run: |
-          pip install strictyaml
+          pip install strictyaml boto3
       - name: Run patching SLA check
         id: patch_check
         continue-on-error: true
@@ -31,7 +31,6 @@ jobs:
           cat .global-checks-tooling/changed_files.txt
           python \
             .global-checks-tooling/checks/check_patching_sla.py \
-            .global-checks-tooling/data/repo_to_vulns.json \
             .global-checks-tooling/changed_files.txt \
             ${{ github.repository }} \
             .global-checks-tooling/pr_comment.md
