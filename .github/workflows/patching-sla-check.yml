@@ -7,7 +7,16 @@ on:
 jobs:
   patching_sla_check:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
     steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::162856926107:role/gh-action-security-tools
+          aws-region: us-east-1
       - name: Check out target repository
         uses: actions/checkout@v6
         with:
@@ -16,10 +25,11 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: devrev/global-gh-tools
+          ref: main
           path: .global-checks-tooling
       - name: Load python requirements.
         run: |
-          pip install strictyaml
+          pip install strictyaml boto3
       - name: Run patching SLA check
         id: patch_check
         continue-on-error: true
@@ -31,7 +41,6 @@ jobs:
           cat .global-checks-tooling/changed_files.txt
           python \
             .global-checks-tooling/checks/check_patching_sla.py \
-            .global-checks-tooling/data/repo_to_vulns.json \
             .global-checks-tooling/changed_files.txt \
             ${{ github.repository }} \
             .global-checks-tooling/pr_comment.md
