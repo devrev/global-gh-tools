@@ -2,7 +2,7 @@ name: patching SLA check
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, reopened, labeled]
 
 jobs:
   patching_sla_check:
@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: devrev/global-gh-tools
-          ref: main
+          ref: jro/debug_push2
           path: .global-checks-tooling
       - name: Load python requirements.
         run: |
