@@ -1,4 +1,4 @@
-name: patching SLA check
+name: patching SLA check (debug)
 
 on:
   pull_request:
