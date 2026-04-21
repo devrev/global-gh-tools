@@ -17,15 +17,11 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::162856926107:role/gh-action-security-tools
           aws-region: us-east-1
-      - name: Check out target repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
       - name: Check out workflow tooling repository
         uses: actions/checkout@v6
         with:
           repository: devrev/global-gh-tools
-          ref: main
+          ref: jro/allow_dockerfile_changes
           path: .global-checks-tooling
       - name: Load python requirements.
         run: |
