@@ -22,7 +22,8 @@ ALLOWED_FILES = [
     "Package.resolved",
     "project.pbxproj",
     "uv.lock",
-    "Dockerfile*"
+    "Dockerfile*",
+    "Makefile*"
 ]
 
 def is_file_allowed(file_path, allowed_patterns):
