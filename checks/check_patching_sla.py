@@ -23,7 +23,8 @@ ALLOWED_FILES = [
     "project.pbxproj",
     "uv.lock",
     "Dockerfile*",
-    "Makefile*"
+    "Makefile*",
+    "pnpm-lock.yaml"
 ]
 
 def is_file_allowed(file_path, allowed_patterns):
