@@ -13,7 +13,7 @@ ALLOWED_FILES = [
     "CODEOWNERS",
     "go.mod",
     "go.sum",
-    "requirements.txt",
+    "requirements.*",
     "package.json",
     "package-lock.json",
     "pkg.config.json",
