@@ -24,7 +24,8 @@ ALLOWED_FILES = [
     "uv.lock",
     "Dockerfile*",
     "Makefile*",
-    "pnpm-lock.yaml"
+    "pnpm-lock.yaml",
+    "build.gradle"
 ]
 
 def is_file_allowed(file_path, allowed_patterns):
