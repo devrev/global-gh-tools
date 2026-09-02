@@ -26,7 +26,8 @@ ALLOWED_FILES = [
     "Makefile*",
     "pnpm-lock.yaml",
     "build.gradle",
-    "pyproject.toml"
+    "pyproject.toml",
+    ".dockerignore"
 ]
 
 def is_file_allowed(file_path, allowed_patterns):
