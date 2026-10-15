@@ -1,6 +1,8 @@
 import os
+import sys
 
 CODEOWNERS_FILE = ".github/CODEOWNERS"
+
 
 def check_codeowners():
     """
@@ -17,9 +19,10 @@ def check_codeowners():
     print(f"{CODEOWNERS_FILE} file exists and is not empty.")
     return True
 
+
 if __name__ == "__main__":
     if not check_codeowners():
         print("Please add a CODEOWNERS file to the repository.")
-        exit(1)
+        sys.exit(1)
     else:
         print("CODEOWNERS file check passed.")

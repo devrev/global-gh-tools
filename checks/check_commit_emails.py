@@ -1,10 +1,12 @@
 import os
+import sys
 
 EMAILS_PATH = ".global-checks-tooling/committers.txt"
 
 WHITELIST = [
     "actions@github.com",
 ]
+
 
 # Check that the emails in the file are from @devrev.ai.
 def check_commit_emails():
@@ -29,7 +31,8 @@ def check_commit_emails():
     print(f"{EMAILS_PATH} file exists and contains valid emails.")
     return True
 
+
 if __name__ == "__main__":
     if not check_commit_emails():
         print("Please ensure all committer emails are from @devrev.ai.")
-        exit(1)
+        sys.exit(1)

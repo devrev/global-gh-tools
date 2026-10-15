@@ -9,17 +9,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out target repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Check out workflow tooling repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
-          repository: devrev/jano-gh-workflow
+          repository: devrev/global-gh-tools
           path: .global-checks-tooling
       - name: Load python requirements.
         run: |
-          pip install strictyaml
+          python -m pip install -r .global-checks-tooling/requirements.txt
       - name: Check that there is a CODEOWNERS file
         run: |
           echo "Check whether the repo has a .github/CODEOWNERS file"
@@ -42,5 +42,4 @@ jobs:
           --no-fail \
           --no-update \
           --json > .global-checks-tooling/trufflehog.json
-          cat .global-checks-tooling/trufflehog.json
           python .global-checks-tooling/checks/check_trufflehog.py .global-checks-tooling/trufflehog.json
