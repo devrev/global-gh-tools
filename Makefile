@@ -27,3 +27,9 @@ deps: $(venv)/.deps
 
 test: $(venv)/.deps
 	$(py) -m unittest
+
+update-requirements: $(py)
+	$(py) -m uv pip compile --python-version $(PYTHON_VERSION) --universal \
+		--upgrade --custom-compile-command "make update-requirements" \
+		requirements.in --output-file requirements.txt
+.PHONY: update-requirements

@@ -1,9 +1,8 @@
-import json
-import sys
-import os
 import fnmatch
+import os
+import sys
+
 import boto3
-from botocore.exceptions import ClientError
 
 # The list of allowed files/patterns in the patch. If any file outside this list is modified, the patch will be blocked.
 # The list includes any file that is necessary for dependency management or build configuration.
@@ -27,8 +26,9 @@ ALLOWED_FILES = [
     "pnpm-lock.yaml",
     "build.gradle",
     "pyproject.toml",
-    ".dockerignore"
+    ".dockerignore",
 ]
+
 
 def is_file_allowed(file_path, allowed_patterns):
     """
@@ -49,6 +49,7 @@ def is_file_allowed(file_path, allowed_patterns):
 
     return False
 
+
 def query_dynamodb_vulns(repo_name):
     """
     Query DynamoDB for vulnerability information by repo_name.
@@ -65,18 +66,23 @@ def query_dynamodb_vulns(repo_name):
     region_name = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
     table_name = os.environ.get("DYNAMODB_TABLE_NAME", "blocked-repos")
 
-    dynamodb = boto3.resource('dynamodb', endpoint_url=endpoint_url, region_name=region_name)
+    dynamodb = boto3.resource(
+        "dynamodb", endpoint_url=endpoint_url, region_name=region_name
+    )
     table = dynamodb.Table(table_name)
 
-    response = table.get_item(Key={'repo_name': repo_name})
+    response = table.get_item(Key={"repo_name": repo_name})
 
-    if 'Item' in response and 'vulns' in response['Item']:
-        return response['Item']['vulns']
+    if "Item" in response and "vulns" in response["Item"]:
+        return response["Item"]["vulns"]
     return None
+
 
 def check_patching_sla():
     if len(sys.argv) != 4:
-        print("Usage: python check_patching_sla.py <changed_files_path> <repo_name> <comment_file>")
+        print(
+            "Usage: python check_patching_sla.py <changed_files_path> <repo_name> <comment_file>"
+        )
         sys.exit(1)
 
     changed_files_path = sys.argv[1]
@@ -90,25 +96,33 @@ def check_patching_sla():
         changed_files = f.read().splitlines()
     for file in changed_files:
         if not is_file_allowed(file, ALLOWED_FILES):
-            print(f"Repository {repo_name} is in the blocked repos list. Please see PR comment for details.")
-            with open(comment_file, 'w') as f:
-                f.write(f"## ⚠️ Heads-up: This repository will be blocked from any work other than patching.\n")
+            print(
+                f"Repository {repo_name} is in the blocked repos list. Please see PR comment for details."
+            )
+            with open(comment_file, "w") as f:
+                f.write(
+                    "## ⚠️ Heads-up: This repository will be blocked from any work other than patching.\n"
+                )
                 f.write(f"File {file} is not allowed to be modified in this patch.\n")
                 f.write("The following vulnerability issues are past SLA:\n")
                 for issue in vulns:
-                    id = issue['id']
-                    overdue_days = issue['overdue_days']
-                    severity = issue['severity']
-                    owner_email = issue['owner_email']
-                    last_checked = issue['timestamp']
+                    id = issue["id"]
+                    overdue_days = issue["overdue_days"]
+                    severity = issue["severity"]
+                    owner_email = issue["owner_email"]
+                    last_checked = issue["timestamp"]
                     # Extract issue number from id, it is the last part after the last slash.
-                    issue_number = id.split('/')[-1]
-                    f.write(f"- {issue_number}, overdue {overdue_days:.1f}d, sev {severity}, owner: {owner_email}, checked: {last_checked}\n")
-                f.write("\nNote that there is significant latency in updating this list. Please reach out on #antifragile if you are in a hurry or have an emergency.\n")
+                    issue_number = id.split("/")[-1]
+                    f.write(
+                        f"- {issue_number}, overdue {overdue_days:.1f}d, sev {severity}, owner: {owner_email}, checked: {last_checked}\n"
+                    )
+                f.write(
+                    "\nNote that there is significant latency in updating this list. Please reach out on #antifragile if you are in a hurry or have an emergency.\n"
+                )
             return False
     return True
 
 
 if __name__ == "__main__":
     if not check_patching_sla():
-        exit(1)
+        sys.exit(1)

@@ -1,18 +1,24 @@
 import json
 import os
-import strictyaml
 import sys
+
+import strictyaml
 
 CREDS_FILE = ".devrev/creds.yml"
 
-schema = strictyaml.Map({
-    "allow": strictyaml.Seq(
-        strictyaml.Map({
-            "path": strictyaml.Str(),
-            "lines": strictyaml.Str(),
-        })
-    ),
-})
+schema = strictyaml.Map(
+    {
+        "allow": strictyaml.Seq(
+            strictyaml.Map(
+                {
+                    "path": strictyaml.Str(),
+                    "lines": strictyaml.Str(),
+                }
+            )
+        ),
+    }
+)
+
 
 def get_creds_overrides():
     allowed = {}
@@ -21,13 +27,13 @@ def get_creds_overrides():
     with open(CREDS_FILE) as f:
         text = f.read()
     data = strictyaml.load(text, schema)
-    for override in data.data["allow"]:
-        path = override["path"]
+    for override in data["allow"]:
+        path = override["path"].text
         # Decode lines string field. It can contain:
         # 1. A single line number
         # 2. A range of line numbers (e.g., "1-5")
         # 3. A comma-separated list of line number ranaged (e.g., "1,2,3-8")
-        parts = override["lines"].split(",")
+        parts = override["lines"].text.split(",")
         lines = set()
         for part in parts:
             if "-" in part:
@@ -44,18 +50,18 @@ def get_creds_overrides():
 
     return allowed
 
+
 def is_overridden(filename, line_num, creds_overrides):
     lines = creds_overrides.get(filename)
     if lines is None:
         return False
-    if line_num in lines:
-        return True
-    return False
+    return line_num in lines
+
 
 def check_trufflehog(json_path):
     cred_overrides = get_creds_overrides()
     with open(json_path) as f:
-        for line in f.readlines():
+        for line in f:
             line = line.strip()
             if len(line) == 0:
                 continue
@@ -67,18 +73,21 @@ def check_trufflehog(json_path):
 
             # Special handling for github tokens in commit messages:
             if detector_name == "Github" and fn is None:
-                print(f"Skipping {detector_name} finding because detection is in commit message")
+                print(
+                    f"Skipping {detector_name} finding because detection is in commit message"
+                )
                 continue
             if is_overridden(fn, line_num, cred_overrides):
                 print(f"Skipping {fn}:{line_num} because it is in the creds.yml file")
                 continue
             if fn is None:
                 # Clarify that the finding is in a commit message.
-                print(f"<commit message>")
+                print("<commit message>")
             print(f"Found secret in {fn}:{line_num}")
             return False
     print("No secrets found")
     return True
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -86,4 +95,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     json_path = sys.argv[1]
-    check_trufflehog(json_path)
+    sys.exit(0 if check_trufflehog(json_path) else 1)
