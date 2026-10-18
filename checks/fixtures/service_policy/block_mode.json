@@ -1,0 +1,13 @@
+{
+  "repo_name": "devrev/example-repo",
+  "produced_at": "2026-10-19T14:00:00Z",
+  "results": [
+    {
+      "service": "example-svc-gamma",
+      "team": "example-team-three",
+      "policy": {"slug": "example-block-policy", "reason": "Example block policy", "owner": "example-cloud", "remediation_url": "https://example.com/block", "mode": "block"},
+      "outcome": "violate",
+      "evidence": {"observed_at": "2026-10-19T12:00:00Z", "expires_at": null, "link": null, "detail": null}
+    }
+  ]
+}
