@@ -147,6 +147,11 @@ class TestPRDescription(unittest.TestCase):
 
 
 SERVICE_POLICY_FIXTURES = "checks/fixtures/service_policy"
+# sha256 of checks/service_policy_render.py; see
+# test_render_module_hash_matches_vendored_copy.
+SERVICE_POLICY_RENDER_SHA256 = (
+    "468ca589150f77848bd4bd0d794b503fdc3aacf14b11be51f79bad938a29cf2a"
+)
 SERVICE_POLICY_NOW = datetime(2026, 10, 19, 15, 0, tzinfo=timezone.utc)
 
 
@@ -363,6 +368,19 @@ class TestServicePolicyCheck(unittest.TestCase):
             elif isinstance(node, ast.ImportFrom):
                 modules.add(node.module.split(".")[0])
         self.assertTrue(modules <= {"hashlib", "json", "re", "urllib"}, modules)
+
+
+    def test_render_module_hash_matches_vendored_copy(self):
+        # devrev/security-tools vendors this file byte for byte as
+        # cron-jobs/post-service-policy/src/service_policy_render.py, and its
+        # tests/test_refresh_prs.py asserts the same hash (RENDER_SHA256 in
+        # src/refresh_prs.py there). A change here must be re-vendored there and
+        # both constants updated together.
+        import hashlib
+
+        with open("checks/service_policy_render.py", "rb") as f:
+            digest = hashlib.sha256(f.read()).hexdigest()
+        self.assertEqual(digest, SERVICE_POLICY_RENDER_SHA256)
 
 
 class TestServicePolicyGitHub(unittest.TestCase):
