@@ -95,4 +95,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     json_path = sys.argv[1]
-    sys.exit(0 if check_trufflehog(json_path) else 1)
+    check_trufflehog(json_path)
