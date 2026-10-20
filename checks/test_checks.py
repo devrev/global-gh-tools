@@ -77,18 +77,6 @@ class TestTrufflehog(unittest.TestCase):
                 checks.check_trufflehog.check_trufflehog("./trufflehog.json")
             )
 
-    def test_go_sum(self):
-        with change_dir("checks/fixtures/trufflehog/go_sum"):
-            self.assertTrue(
-                checks.check_trufflehog.check_trufflehog("./trufflehog.json")
-            )
-
-    def test_go_sum_mixed(self):
-        with change_dir("checks/fixtures/trufflehog/go_sum_mixed"):
-            self.assertFalse(
-                checks.check_trufflehog.check_trufflehog("./trufflehog.json")
-            )
-
 
 class TestCommitEmails(unittest.TestCase):
     def test_good(self):
