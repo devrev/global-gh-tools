@@ -1,0 +1,13 @@
+{
+  "repo_name": "devrev/example-repo",
+  "produced_at": "2026-10-19T14:00:00Z",
+  "results": [
+    {
+      "service": "example-svc-delta",
+      "team": "example-team-four",
+      "policy": {"slug": "example-hostile-policy", "reason": "**Bold** [click](https://evil.example) <b>x</b>\n::error::injected", "owner": "example-owner::set-env", "remediation_url": "javascript:alert(1)", "mode": "warn"},
+      "outcome": "violate",
+      "evidence": {"observed_at": "2026-10-19T12:00:00Z", "expires_at": null, "link": null, "detail": null}
+    }
+  ]
+}

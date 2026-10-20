@@ -1,0 +1,13 @@
+{
+  "repo_name": "devrev/example-repo",
+  "produced_at": "2026-10-19T14:00:00Z",
+  "results": [
+    {
+      "service": "example-svc-beta",
+      "team": "example-team-two",
+      "policy": {"slug": "example-new-policy", "reason": "Example observe policy", "owner": "example-security", "remediation_url": "https://example.com/observe", "mode": "observe"},
+      "outcome": "violate",
+      "evidence": {"observed_at": "2026-10-19T12:00:00Z", "expires_at": null, "link": null, "detail": null}
+    }
+  ]
+}

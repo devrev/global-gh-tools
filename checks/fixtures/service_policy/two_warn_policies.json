@@ -1,0 +1,27 @@
+{
+  "repo_name": "devrev/example-repo",
+  "produced_at": "2026-10-19T14:00:00Z",
+  "results": [
+    {
+      "service": "example-svc-alpha",
+      "team": "example-team-one",
+      "policy": {"slug": "example-cost-policy", "reason": "Example cost ceiling", "owner": "example-finops", "remediation_url": "https://example.com/cost", "mode": "warn"},
+      "outcome": "unknown",
+      "evidence": {"observed_at": null, "expires_at": null, "link": null, "detail": null}
+    },
+    {
+      "service": "example-svc-alpha",
+      "team": "example-team-one",
+      "policy": {"slug": "example-team-freeze", "reason": "Example team freeze", "owner": "example-program", "remediation_url": "https://example.com/freeze", "mode": "warn"},
+      "outcome": "violate",
+      "evidence": {"observed_at": "2026-10-19T12:00:00Z", "expires_at": null, "link": null, "detail": null}
+    },
+    {
+      "service": "example-svc-beta",
+      "team": "example-team-two",
+      "policy": {"slug": "example-new-policy", "reason": "Example observe policy", "owner": "example-security", "remediation_url": "https://example.com/observe", "mode": "observe"},
+      "outcome": "violate",
+      "evidence": {"observed_at": "2026-10-19T12:00:00Z", "expires_at": null, "link": null, "detail": null}
+    }
+  ]
+}

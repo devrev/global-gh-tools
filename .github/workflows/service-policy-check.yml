@@ -1,0 +1,53 @@
+name: Service Policy check
+
+# Warn-only governance check. It renders the Service Policy projection for
+# this repository as one pull request comment and warning annotations, and it
+# always succeeds in this version: block mode is rendered as warn, and every
+# failure ends in success with a note that governance status is unknown.
+#
+# The projection is read from the DynamoDB table `service-policy-projection`
+# (us-east-1) with GitHub OIDC through a dedicated read-only role.
+# PLACEHOLDER: the role ARN below must be created before rollout. It must be
+# allowed only dynamodb:GetItem on that one table, and its trust policy must
+# accept only OIDC tokens from the devrev organization's pull_request
+# workflows running this check.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  service_policy_check:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Configure AWS credentials
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::162856926107:role/gh-action-service-policy-read
+          aws-region: us-east-1
+      - name: Check out workflow tooling repository
+        continue-on-error: true
+        uses: actions/checkout@v7
+        with:
+          repository: devrev/global-gh-tools
+          ref: main
+          path: .global-checks-tooling
+      - name: Load python requirements.
+        continue-on-error: true
+        run: |
+          python -m pip install -r .global-checks-tooling/requirements.txt
+      - name: Run Service Policy check
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PROJECTION_TABLE_NAME: service-policy-projection
+          MAX_PROJECTION_AGE_HOURS: "6"
+        run: |
+          python .global-checks-tooling/checks/check_service_policy.py \
+            || echo "::warning::Service Policy: governance status unknown: the check did not run."
