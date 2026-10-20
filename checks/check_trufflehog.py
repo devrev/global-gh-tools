@@ -77,6 +77,12 @@ def check_trufflehog(json_path):
                     f"Skipping {detector_name} finding because detection is in commit message"
                 )
                 continue
+            # go.sum files only contain Go module checksums, which detectors can mistake for secrets.
+            if os.path.basename(fn or "") == "go.sum":
+                print(
+                    f"Skipping {fn}:{line_num} because go.sum files contain no secrets"
+                )
+                continue
             if is_overridden(fn, line_num, cred_overrides):
                 print(f"Skipping {fn}:{line_num} because it is in the creds.yml file")
                 continue
@@ -95,4 +101,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     json_path = sys.argv[1]
-    check_trufflehog(json_path)
+    sys.exit(0 if check_trufflehog(json_path) else 1)
