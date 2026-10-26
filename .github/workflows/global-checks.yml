@@ -7,6 +7,9 @@ on:
 jobs:
   global_checks:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Check out target repository
         uses: actions/checkout@v7
@@ -29,6 +32,9 @@ jobs:
           echo "Check whether the repo has a valid .devrev/repo.yml file"
           python .global-checks-tooling/checks/check_repo_yml.py
       - name: Run trufflehog
+        id: trufflehog
+        # Advisory only: findings are reported as a PR comment and do not fail the job.
+        continue-on-error: true
         run: |
           BASE=${{github.event.pull_request.base.sha}}
           HEAD=${{github.event.pull_request.head.sha}}
@@ -42,4 +48,29 @@ jobs:
           --no-fail \
           --no-update \
           --json > .global-checks-tooling/trufflehog.json
-          python .global-checks-tooling/checks/check_trufflehog.py .global-checks-tooling/trufflehog.json
+          python .global-checks-tooling/checks/check_trufflehog.py \
+            .global-checks-tooling/trufflehog.json \
+            .global-checks-tooling/trufflehog_comment.md \
+            ${{ github.repository }}
+      - name: Comment trufflehog findings on PR
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          OUTCOME: ${{ steps.trufflehog.outcome }}
+        run: |
+          COMMENT_FILE=.global-checks-tooling/trufflehog_comment.md
+          if [ ! -f "$COMMENT_FILE" ]; then
+            echo "No trufflehog comment generated, skipping."
+            exit 0
+          fi
+          # Update the existing trufflehog comment instead of adding a new one on every push.
+          EXISTING_ID=$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" \
+            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- trufflehog-advisory -->"))) | .id' | head -n 1)
+          if [ -n "$EXISTING_ID" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$EXISTING_ID" -F body=@"$COMMENT_FILE" > /dev/null
+          elif [ "$OUTCOME" = "failure" ]; then
+            gh pr comment "$PR_NUMBER" --repo "$REPO" --body-file "$COMMENT_FILE"
+          fi
