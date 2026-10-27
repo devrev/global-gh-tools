@@ -77,6 +77,31 @@ class TestTrufflehog(unittest.TestCase):
                 checks.check_trufflehog.check_trufflehog("./trufflehog.json")
             )
 
+    def test_findings_deduplicated(self):
+        with change_dir("checks/fixtures/trufflehog/mixed"):
+            findings = checks.check_trufflehog.get_findings("./trufflehog.json")
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0]["line"], 35)
+
+    def test_comment_with_findings(self):
+        with change_dir("checks/fixtures/trufflehog/mixed"):
+            findings = checks.check_trufflehog.get_findings("./trufflehog.json")
+        comment = checks.check_trufflehog.format_comment(findings, "devrev/devrev-web")
+        self.assertIn(checks.check_trufflehog.COMMENT_MARKER, comment)
+        self.assertIn("1 potential secret(s) found", comment)
+        self.assertIn("advisory", comment)
+        self.assertIn(
+            "https://github.com/devrev/devrev-web/blob/3db7ee06194072a6f2af4844cab9eecf0b75da36/",
+            comment,
+        )
+        # The raw secret value must never be included in the comment.
+        self.assertNotIn("77307a65-2e93-4e47-811b-", comment)
+
+    def test_comment_without_findings(self):
+        comment = checks.check_trufflehog.format_comment([])
+        self.assertIn(checks.check_trufflehog.COMMENT_MARKER, comment)
+        self.assertIn("no potential secrets found", comment)
+
 
 class TestCommitEmails(unittest.TestCase):
     def test_good(self):
