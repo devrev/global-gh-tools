@@ -28,6 +28,9 @@ deps: $(venv)/.deps
 test: $(venv)/.deps
 	$(py) -m unittest
 
+snyk: $(venv)/.deps .d.snyk
+	$(SNYK) test . --all-projects --dev --command=$(py) --exclude=_build
+
 update-requirements: $(py)
 	$(py) -m uv pip compile --python-version $(PYTHON_VERSION) --universal \
 		--upgrade --custom-compile-command "make update-requirements" \

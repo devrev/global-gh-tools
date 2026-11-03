@@ -150,6 +150,120 @@ $(__python_pip_conf): | $(__python_pip_cache)
 $(__python_pip_cache):
 	mkdir -p $@
 
+# SOURCE: https://github.com/devrev/sidekick/blob/main/internal/component/data/jq
+JQ_VERSION ?= jq-1.7.1
+JQ = $(realpath $(__jq_bin))
+__jq_dir = $(TOOLS_DIR)/jq/$(JQ_VERSION)
+__jq_bin = $(__jq_dir)/jq
+__jq_kernel = $(shell uname -s | tr "[:upper:]" "[:lower:]" | sed -e 's/darwin/macos/')
+__jq_arch = $(shell uname -m | sed -e 's/x86_64/amd64/')
+__jq_file = jq-$(__jq_kernel)-$(__jq_arch)
+__jq_base_url = https://github.com/jqlang/jq/releases/download/$(JQ_VERSION)
+__jq_bin_url = $(__jq_base_url)/$(__jq_file)
+__jq_checksum_url = $(__jq_base_url)/sha256sum.txt
+.d.jq: $(__jq_bin)
+.PHONY: .d.jq
+$(__jq_bin):
+	rm -f $(GLOBAL_TMP_DIR)/$(__jq_file) $(GLOBAL_TMP_DIR)/$(__jq_file).sha256
+	curl -s -L -o $(GLOBAL_TMP_DIR)/$(__jq_file) $(__jq_bin_url)
+	curl -s -L -o $(GLOBAL_TMP_DIR)/sha256sum.txt $(__jq_checksum_url)
+	cd $(GLOBAL_TMP_DIR) && grep -F $(__jq_file) sha256sum.txt | $(SHA256SUM) -c -
+	chmod u+x $(GLOBAL_TMP_DIR)/$(__jq_file)
+	rm -rf $(__jq_dir)
+	mkdir -p $(__jq_dir)
+	cp $(GLOBAL_TMP_DIR)/$(__jq_file) $@
+
+# SOURCE: https://github.com/devrev/sidekick/blob/main/internal/component/data/go
+GO_VERSION ?= go1.24.1
+GO = env GOENV=$(GO_ENV) GOROOT=$(GO_ROOT) $(GO_ROOT)/bin/go
+go_dep_loc = $(shell $(GO) mod download $(1) && $(GO) list -m -f "{{.Dir}}" $(1))
+go_devrev_dep_loc = $(call go_dep_loc,github.com/devrev/$(1))
+go_dep_version = \
+  $(shell 2>/dev/null $(GO) mod download $(1) && $(GO) list -m \
+    -f "{{if .Replace}}{{.Replace.Version}}{{else}}{{.Version}}{{end}}" $(1) || echo DUMMY)
+go_devrev_dep_version = $(call go_dep_version,github.com/devrev/$(1))
+go_devrev_proto_sym = \
+  mkdir -p $(dir $(TMP_DIR)/proto/devrev/$1) \
+  && ln -n -f -s '$(call go_devrev_dep_loc,$1)' $(TMP_DIR)/proto/devrev/$1
+GO_ENV = $(abspath $(__go_dir)/env)
+GO_ROOT = $(realpath $(__go_dir)/go)
+__go_dir = $(TOOLS_DIR)/go/$(GO_VERSION)
+__go_env = $(__go_dir)/env
+__go_kernel = $(shell uname -s | tr "[:upper:]" "[:lower:]")
+__go_arch = $(shell uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/')
+__go_mod_cache = $(GLOBAL_CACHE_DIR)/go/mod
+.d.go: $(__go_env)
+.PHONY: .d.go
+$(__go_mod_cache):
+	mkdir -p $@
+$(__go_dir): | $(__go_mod_cache)
+	rm -f $(GLOBAL_TMP_DIR)/go.tar.gz $(GLOBAL_TMP_DIR)/go.tar.gz.sha256
+	curl \
+	  -s \
+	  -L \
+	  -o $(GLOBAL_TMP_DIR)/go.tar.gz \
+	  https://go.dev/dl/$(GO_VERSION).$(__go_kernel)-$(__go_arch).tar.gz
+	rm -rf $(GLOBAL_TMP_DIR)/gotmp
+	mkdir -p $(GLOBAL_TMP_DIR)/gotmp
+	tar -xzf $(GLOBAL_TMP_DIR)/go.tar.gz -C $(GLOBAL_TMP_DIR)/gotmp
+	rm -rf $(GLOBAL_TMP_DIR)/go.tar.gz
+	mkdir $(GLOBAL_TMP_DIR)/gotmp/packages
+	mkdir -p $(@D)
+	mv $(GLOBAL_TMP_DIR)/gotmp $@
+$(__go_env): | $(__go_dir)
+	echo "GOROOT=$(realpath $(__go_dir)/go)" > $@
+	echo "GOPATH=$(realpath $(__go_dir)/packages)" >> $@
+	echo "GOMODCACHE=$(realpath $(__go_mod_cache))" >> $@
+	echo "GOTOOLCHAIN=local" >> $@
+
+# SOURCE: https://github.com/devrev/sidekick/blob/main/internal/component/data/snyk
+SNYK_VERSION ?= v1.1295.0
+SNYK_KILL_SWITCH ?= disabled
+SNYK = \
+  env \
+  GOENV="$(GO_ENV)" \
+  GOROOT="$(GO_ROOT)" \
+  PATH="$(GO_ROOT)/bin:$(PATH)" \
+  $(realpath $(__snyk_bin))
+SNYK_TEST = \
+  rm -f $(TMP_DIR)/snyk.json \
+  && $(SNYK) test --json-file-output=$(TMP_DIR)/snyk.json
+SNYK_TEST_FILTER = \
+  $(JQ) \
+    '[.vulnerabilities[] | select(.fixedIn != [])] | length' \
+    $(TMP_DIR)/snyk.json \
+  | xargs test 0 -eq
+ifeq ($(SNYK_KILL_SWITCH),enabled)
+  SNYK = echo -- snyk
+endif
+__snyk_bin = $(TOOLS_DIR)/snyk/$(SNYK_VERSION)/snyk
+__snyk_kernel = $(shell uname -s | tr "[:upper:]" "[:lower:]" | sed -e 's/darwin/macos/')
+__snyk_arch = $(shell uname -m | sed -e 's/x86_64//' -e 's/arm64/-arm64/')
+__snyk_artifact = snyk-$(__snyk_kernel)$(__snyk_arch)
+__snyk_artifact_sha = $(__snyk_artifact).sha256
+__snyk_base_url = https://github.com/snyk/cli/releases/download/$(SNYK_VERSION)
+.d.snyk: $(__snyk_bin) | .d.go .d.jq
+ifdef SNYK_TOKEN
+	@$(SNYK) auth $(SNYK_TOKEN)
+endif
+.PHONY: .d.snyk
+$(__snyk_bin):
+	rm -f $(GLOBAL_TMP_DIR)/snyk-*
+	curl \
+	  -s \
+	  -L \
+	  -o $(GLOBAL_TMP_DIR)/$(__snyk_artifact) \
+	  $(__snyk_base_url)/$(__snyk_artifact)
+	curl \
+	  -s \
+	  -L \
+	  -o $(GLOBAL_TMP_DIR)/$(__snyk_artifact_sha) \
+	  $(__snyk_base_url)/$(__snyk_artifact_sha)
+	cd $(GLOBAL_TMP_DIR) && $(SHA256SUM) -c $(__snyk_artifact_sha)
+	chmod a+x $(GLOBAL_TMP_DIR)/$(__snyk_artifact)
+	mkdir -p $(@D)
+	mv $(GLOBAL_TMP_DIR)/$(__snyk_artifact) $@
+
 # SOURCE: https://github.com/devrev/sidekick/blob/main/internal/component/data/gh
 GH_VERSION ?= v2.65.0
 GH_VERSION_int ?= $(patsubst v%,%,$(GH_VERSION))
