@@ -49,9 +49,9 @@ jobs:
           --no-update \
           --json > .global-checks-tooling/trufflehog.json
           python .global-checks-tooling/checks/check_trufflehog.py \
-            .global-checks-tooling/trufflehog.json \
-            .global-checks-tooling/trufflehog_comment.md \
-            ${{ github.repository }}
+            ${{ github.repository }} \
+            < .global-checks-tooling/trufflehog.json \
+            > .global-checks-tooling/trufflehog_comment.md
       - name: Comment trufflehog findings on PR
         if: always()
         continue-on-error: true
@@ -62,7 +62,8 @@ jobs:
           OUTCOME: ${{ steps.trufflehog.outcome }}
         run: |
           COMMENT_FILE=.global-checks-tooling/trufflehog_comment.md
-          if [ ! -f "$COMMENT_FILE" ]; then
+          # The shell creates the file before the script runs, so an empty file means it failed early.
+          if [ ! -s "$COMMENT_FILE" ]; then
             echo "No trufflehog comment generated, skipping."
             exit 0
           fi

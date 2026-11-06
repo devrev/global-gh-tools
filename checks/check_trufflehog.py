@@ -1,8 +1,12 @@
 import json
 import os
 import sys
+from functools import partial
 
 import strictyaml
+
+# Diagnostics go to stderr so that stdout carries only the PR comment markdown.
+log = partial(print, file=sys.stderr)
 
 CREDS_FILE = ".devrev/creds.yml"
 
@@ -61,9 +65,10 @@ def is_overridden(filename, line_num, creds_overrides):
 COMMENT_MARKER = "<!-- trufflehog-advisory -->"
 
 
-def get_findings(json_path):
+def get_findings(json_lines):
     """
-    Parse trufflehog JSON output and return the findings that are not ignored.
+    Parse trufflehog JSON output (an iterable of JSON lines, e.g. an open file
+    or sys.stdin) and return the findings that are not ignored.
 
     Each finding is a dict with keys: detector, file, line, commit, verified.
     Duplicate findings (same detector, file, line and commit) are reported once.
@@ -71,53 +76,52 @@ def get_findings(json_path):
     cred_overrides = get_creds_overrides()
     findings = []
     seen = set()
-    with open(json_path) as f:
-        for line in f:
-            line = line.strip()
-            if len(line) == 0:
-                continue
-            finding = json.loads(line)
-            detector_name = finding["DetectorName"]
-            git_info = finding["SourceMetadata"]["Data"]["Git"]
-            fn = git_info.get("file")
-            line_num = git_info["line"]
+    for line in json_lines:
+        line = line.strip()
+        if len(line) == 0:
+            continue
+        finding = json.loads(line)
+        detector_name = finding["DetectorName"]
+        git_info = finding["SourceMetadata"]["Data"]["Git"]
+        fn = git_info.get("file")
+        line_num = git_info["line"]
 
-            # Special handling for github tokens in commit messages:
-            if detector_name == "Github" and fn is None:
-                print(
-                    f"Skipping {detector_name} finding because detection is in commit message"
-                )
-                continue
-            # go.sum files only contain Go module checksums, which detectors can mistake for secrets.
-            if os.path.basename(fn or "") == "go.sum":
-                print(
-                    f"Skipping {fn}:{line_num} because go.sum files contain no secrets"
-                )
-                continue
-            if is_overridden(fn, line_num, cred_overrides):
-                print(f"Skipping {fn}:{line_num} because it is in the creds.yml file")
-                continue
-
-            commit = git_info.get("commit")
-            key = (detector_name, fn, line_num, commit)
-            if key in seen:
-                continue
-            seen.add(key)
-            if fn is None:
-                # Clarify that the finding is in a commit message.
-                print("<commit message>")
-            print(f"Found secret in {fn}:{line_num}")
-            findings.append(
-                {
-                    "detector": detector_name,
-                    "file": fn,
-                    "line": line_num,
-                    "commit": commit,
-                    "verified": finding.get("Verified", False),
-                }
+        # Special handling for github tokens in commit messages:
+        if detector_name == "Github" and fn is None:
+            log(
+                f"Skipping {detector_name} finding because detection is in commit message"
             )
+            continue
+        # go.sum files only contain Go module checksums, which detectors can mistake for secrets.
+        if os.path.basename(fn or "") == "go.sum":
+            log(
+                f"Skipping {fn}:{line_num} because go.sum files contain no secrets"
+            )
+            continue
+        if is_overridden(fn, line_num, cred_overrides):
+            log(f"Skipping {fn}:{line_num} because it is in the creds.yml file")
+            continue
+
+        commit = git_info.get("commit")
+        key = (detector_name, fn, line_num, commit)
+        if key in seen:
+            continue
+        seen.add(key)
+        if fn is None:
+            # Clarify that the finding is in a commit message.
+            log("<commit message>")
+        log(f"Found secret in {fn}:{line_num}")
+        findings.append(
+            {
+                "detector": detector_name,
+                "file": fn,
+                "line": line_num,
+                "commit": commit,
+                "verified": finding.get("Verified", False),
+            }
+        )
     if not findings:
-        print("No secrets found")
+        log("No secrets found")
     return findings
 
 
@@ -169,21 +173,18 @@ def format_comment(findings, repo_name=None):
     return "\n".join(lines) + "\n"
 
 
-def check_trufflehog(json_path):
-    return not get_findings(json_path)
+def check_trufflehog(json_lines):
+    return not get_findings(json_lines)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(
-            "Usage: python check_trufflehog.py <output.json> [comment_file] [repo_name]"
-        )
-        sys.exit(1)
+    # Reads trufflehog JSON lines from stdin and writes the PR comment markdown
+    # to stdout. File paths are left to the caller's shell redirections.
+    if len(sys.argv) > 2:
+        log("Usage: python check_trufflehog.py [repo_name] < output.json > comment.md")
+        sys.exit(2)
 
-    json_path = sys.argv[1]
-    findings = get_findings(json_path)
-    if len(sys.argv) >= 3:
-        repo_name = sys.argv[3] if len(sys.argv) >= 4 else None
-        with open(sys.argv[2], "w") as f:
-            f.write(format_comment(findings, repo_name))
+    repo_name = sys.argv[1] if len(sys.argv) == 2 else None
+    findings = get_findings(sys.stdin)
+    sys.stdout.write(format_comment(findings, repo_name))
     sys.exit(0 if not findings else 1)
