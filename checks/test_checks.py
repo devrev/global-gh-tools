@@ -20,6 +20,11 @@ def change_dir(destination):
         os.chdir(prev_dir)  # Revert to the original directory
 
 
+def read_lines(path):
+    with open(path) as f:
+        return f.readlines()
+
+
 class TestCodeOwners(unittest.TestCase):
     def test_without_codeowners(self):
         with change_dir("checks/fixtures/codeowners/without"):
@@ -44,48 +49,48 @@ class TestTrufflehog(unittest.TestCase):
     def test_empty(self):
         with change_dir("checks/fixtures/trufflehog/empty"):
             self.assertTrue(
-                checks.check_trufflehog.check_trufflehog("./trufflehog.json")
+                checks.check_trufflehog.check_trufflehog(read_lines("./trufflehog.json"))
             )
 
     def test_bad(self):
         with change_dir("checks/fixtures/trufflehog/bad"):
             self.assertFalse(
-                checks.check_trufflehog.check_trufflehog("./trufflehog.json")
+                checks.check_trufflehog.check_trufflehog(read_lines("./trufflehog.json"))
             )
 
     def test_override(self):
         with change_dir("checks/fixtures/trufflehog/override"):
             self.assertTrue(
-                checks.check_trufflehog.check_trufflehog("./trufflehog.json")
+                checks.check_trufflehog.check_trufflehog(read_lines("./trufflehog.json"))
             )
 
     def test_mixed(self):
         with change_dir("checks/fixtures/trufflehog/mixed"):
             self.assertFalse(
-                checks.check_trufflehog.check_trufflehog("./trufflehog.json")
+                checks.check_trufflehog.check_trufflehog(read_lines("./trufflehog.json"))
             )
 
     def test_two_overrides(self):
         with change_dir("checks/fixtures/trufflehog/two_overrides"):
             self.assertTrue(
-                checks.check_trufflehog.check_trufflehog("./trufflehog.json")
+                checks.check_trufflehog.check_trufflehog(read_lines("./trufflehog.json"))
             )
 
     def test_merge_message(self):
         with change_dir("checks/fixtures/trufflehog/merge_message"):
             self.assertTrue(
-                checks.check_trufflehog.check_trufflehog("./trufflehog.json")
+                checks.check_trufflehog.check_trufflehog(read_lines("./trufflehog.json"))
             )
 
     def test_findings_deduplicated(self):
         with change_dir("checks/fixtures/trufflehog/mixed"):
-            findings = checks.check_trufflehog.get_findings("./trufflehog.json")
+            findings = checks.check_trufflehog.get_findings(read_lines("./trufflehog.json"))
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0]["line"], 35)
 
     def test_comment_with_findings(self):
         with change_dir("checks/fixtures/trufflehog/mixed"):
-            findings = checks.check_trufflehog.get_findings("./trufflehog.json")
+            findings = checks.check_trufflehog.get_findings(read_lines("./trufflehog.json"))
         comment = checks.check_trufflehog.format_comment(findings, "devrev/devrev-web")
         self.assertIn(checks.check_trufflehog.COMMENT_MARKER, comment)
         self.assertIn("1 potential secret(s) found", comment)
