@@ -25,6 +25,7 @@ ALLOWED_FILES = [
     "Makefile*",
     "pnpm-lock.yaml",
     "build.gradle",
+    "build.gradle.kts",
     "pyproject.toml",
     ".dockerignore",
 ]
